@@ -7,6 +7,7 @@
     <File Path=".gitignore" />
     <File Path="Directory.Build.targets" />
   </Folder>
+  <Project Path="Sellorio.Clients.Rest/Sellorio.Clients.Rest.csproj" Id="b55b3dae-084f-436d-8580-982fc9630627" />
   <Project Path="Sellorio.Results/Sellorio.Results.csproj" />
   <Project Path="Sellorio.Validation/Sellorio.Validation.csproj" />
 </Solution>
