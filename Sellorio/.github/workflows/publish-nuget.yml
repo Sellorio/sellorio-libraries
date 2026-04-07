@@ -1,0 +1,157 @@
+name: Publish NuGet packages
+
+on:
+  workflow_dispatch:
+    inputs:
+      version:
+        description: Package version to publish
+        required: true
+        type: string
+  push:
+    tags:
+      - 'v*'
+
+permissions:
+  contents: read
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    env:
+      DOTNET_NOLOGO: true
+      DOTNET_CLI_TELEMETRY_OPTOUT: true
+      NUGET_API_KEY: ${{ secrets.NUGET_API_KEY }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v5
+
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v5
+        with:
+          dotnet-version: 10.0.x
+
+      - name: Determine version
+        id: version
+        shell: pwsh
+        run: |
+          $version = '${{ github.event.inputs.version }}'
+          if ([string]::IsNullOrWhiteSpace($version)) {
+            if ('${{ github.ref_type }}' -eq 'tag') {
+              $version = '${{ github.ref_name }}'
+            }
+          }
+
+          if ([string]::IsNullOrWhiteSpace($version)) {
+            throw 'A package version is required.'
+          }
+
+          if ($version.StartsWith('v')) {
+            $version = $version.Substring(1)
+          }
+
+          "packageVersion=$version" | Out-File -FilePath $env:GITHUB_OUTPUT -Append
+
+      - name: Pack and publish in dependency order
+        shell: pwsh
+        run: |
+          if ([string]::IsNullOrWhiteSpace($env:NUGET_API_KEY)) {
+            throw 'NUGET_API_KEY secret is required.'
+          }
+
+          $root = (Get-Location).Path
+          $packageVersion = '${{ steps.version.outputs.packageVersion }}'
+          $localFeed = Join-Path $root '.artifacts/local-feed'
+          $packageOutput = Join-Path $root '.artifacts/packages'
+
+          New-Item -ItemType Directory -Force -Path $localFeed | Out-Null
+          New-Item -ItemType Directory -Force -Path $packageOutput | Out-Null
+
+          $projects = Get-ChildItem -Path $root -Recurse -Filter *.csproj -File |
+            Where-Object { $_.FullName -notmatch '[\\/](bin|obj)[\\/]' } |
+            Sort-Object FullName
+
+          if (-not $projects) {
+            throw 'No project files were found.'
+          }
+
+          $projectMap = @{}
+          foreach ($project in $projects) {
+            $projectMap[$project.FullName] = [ordered]@{
+              Project = $project
+              References = [System.Collections.Generic.List[string]]::new()
+            }
+          }
+
+          foreach ($project in $projects) {
+            [xml]$xml = Get-Content -LiteralPath $project.FullName
+            $references = @($xml.Project.ItemGroup.ProjectReference)
+
+            foreach ($reference in $references) {
+              if (-not $reference.Include) {
+                continue
+              }
+
+              $resolvedReference = [System.IO.Path]::GetFullPath((Join-Path $project.Directory.FullName $reference.Include))
+              if ($projectMap.ContainsKey($resolvedReference)) {
+                $projectMap[$project.FullName].References.Add($resolvedReference)
+              }
+            }
+          }
+
+          $orderedProjects = [System.Collections.Generic.List[string]]::new()
+          $visited = @{}
+
+          function VisitProject([string] $projectPath) {
+            if ($visited[$projectPath] -eq 'Visiting') {
+              throw "Cycle detected while sorting project references at $projectPath"
+            }
+
+            if ($visited[$projectPath] -eq 'Visited') {
+              return
+            }
+
+            $visited[$projectPath] = 'Visiting'
+            foreach ($reference in $projectMap[$projectPath].References) {
+              VisitProject $reference
+            }
+
+            $visited[$projectPath] = 'Visited'
+            $orderedProjects.Add($projectPath)
+          }
+
+          foreach ($projectPath in $projectMap.Keys) {
+            VisitProject $projectPath
+          }
+
+          foreach ($projectPath in $orderedProjects) {
+            $project = $projectMap[$projectPath].Project
+            Write-Host "Packing $($project.FullName)"
+
+            [xml]$projectXml = Get-Content -LiteralPath $project.FullName
+            $packageId = $projectXml.Project.PropertyGroup.PackageId |
+              Select-Object -First 1
+
+            if ([string]::IsNullOrWhiteSpace($packageId)) {
+              $packageId = $project.BaseName
+            }
+
+            dotnet restore $project.FullName -p:Configuration=Release -p:Version=$packageVersion --source $localFeed --source https://api.nuget.org/v3/index.json
+            if ($LASTEXITCODE -ne 0) { throw "Restore failed for $($project.FullName)" }
+
+            dotnet pack $project.FullName --configuration Release --no-restore -p:Version=$packageVersion --output $packageOutput
+            if ($LASTEXITCODE -ne 0) { throw "Pack failed for $($project.FullName)" }
+
+            $projectPackageFiles = Get-ChildItem -Path $packageOutput -Filter "$packageId.$packageVersion*.nupkg" -File |
+              Where-Object { $_.Name -notlike '*.symbols.nupkg' } |
+              Sort-Object LastWriteTimeUtc -Descending
+
+            if (-not $projectPackageFiles) {
+              throw "Package output not found for $($project.FullName)"
+            }
+
+            $packageFile = $projectPackageFiles[0]
+            Copy-Item -LiteralPath $packageFile.FullName -Destination (Join-Path $localFeed $packageFile.Name) -Force
+
+            dotnet nuget push $packageFile.FullName --api-key $env:NUGET_API_KEY --source https://api.nuget.org/v3/index.json
+            if ($LASTEXITCODE -ne 0) { throw "NuGet push failed for $($project.FullName)" }
+          }

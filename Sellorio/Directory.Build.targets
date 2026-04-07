@@ -1,0 +1,15 @@
+<Project>
+  <PropertyGroup>
+    <GenerateDocumentationFile>True</GenerateDocumentationFile>
+  </PropertyGroup>
+	
+  <PropertyGroup Condition="'$(Configuration)' == 'Release'">
+    <_ProjectReferencePackageVersion Condition="'$(PackageVersion)' != ''">$(PackageVersion)</_ProjectReferencePackageVersion>
+    <_ProjectReferencePackageVersion Condition="'$(_ProjectReferencePackageVersion)' == '' and '$(Version)' != ''">$(Version)</_ProjectReferencePackageVersion>
+  </PropertyGroup>
+
+  <ItemGroup Condition="'$(Configuration)' == 'Release' and '@(ProjectReference)' != '' and '$(_ProjectReferencePackageVersion)' != ''">
+    <PackageReference Include="@(ProjectReference -> '%(Filename)')" Version="$(_ProjectReferencePackageVersion)" />
+    <ProjectReference Remove="@(ProjectReference)" />
+  </ItemGroup>
+</Project>
