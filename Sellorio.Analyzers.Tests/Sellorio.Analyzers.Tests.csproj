@@ -1,0 +1,30 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+	<PropertyGroup>
+		<TargetFramework>net10.0</TargetFramework>
+
+		<AutoGenerateBindingRedirects>true</AutoGenerateBindingRedirects>
+		<GenerateBindingRedirectsOutputType>true</GenerateBindingRedirectsOutputType>
+	</PropertyGroup>
+
+	<ItemGroup>
+		<PackageReference Include="Microsoft.NET.Test.Sdk" Version="18.3.0" />
+		<PackageReference Include="xunit" Version="2.9.3" />
+		<PackageReference Include="xunit.runner.visualstudio" Version="2.8.2">
+			<IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+			<PrivateAssets>all</PrivateAssets>
+		</PackageReference>
+		<PackageReference Include="Microsoft.CodeAnalysis" Version="5.3.0" />
+		<PackageReference Include="Microsoft.CodeAnalysis.CSharp.Analyzer.Testing.XUnit" Version="1.1.2" />
+		<PackageReference Include="Microsoft.CodeAnalysis.CSharp.CodeFix.Testing.XUnit" Version="1.1.2" />
+		<PackageReference Include="Microsoft.CodeAnalysis.CSharp.CodeRefactoring.Testing.XUnit" Version="1.1.2" />
+		<PackageReference Include="Microsoft.CodeAnalysis.VisualBasic.Analyzer.Testing.XUnit" Version="1.1.2" />
+		<PackageReference Include="Microsoft.CodeAnalysis.VisualBasic.CodeFix.Testing.XUnit" Version="1.1.2" />
+		<PackageReference Include="Microsoft.CodeAnalysis.VisualBasic.CodeRefactoring.Testing.XUnit" Version="1.1.2" />
+	</ItemGroup>
+
+	<ItemGroup>
+		<ProjectReference Include="..\Sellorio.Analyzers.CodeFixes\Sellorio.Analyzers.CodeFixes.csproj" />
+	</ItemGroup>
+
+</Project>

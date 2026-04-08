@@ -3,12 +3,12 @@
     <GenerateDocumentationFile>True</GenerateDocumentationFile>
   </PropertyGroup>
 	
-  <PropertyGroup Condition="'$(Configuration)' == 'Release'">
+  <PropertyGroup Condition="'$(Configuration)' == 'Release' and '$(DisableProjectReferencePackageConversion)' != 'true'">
     <_ProjectReferencePackageVersion Condition="'$(PackageVersion)' != ''">$(PackageVersion)</_ProjectReferencePackageVersion>
     <_ProjectReferencePackageVersion Condition="'$(_ProjectReferencePackageVersion)' == '' and '$(Version)' != ''">$(Version)</_ProjectReferencePackageVersion>
   </PropertyGroup>
 
-  <ItemGroup Condition="'$(Configuration)' == 'Release' and '@(ProjectReference)' != '' and '$(_ProjectReferencePackageVersion)' != ''">
+  <ItemGroup Condition="'$(Configuration)' == 'Release' and '$(DisableProjectReferencePackageConversion)' != 'true' and '@(ProjectReference)' != '' and '$(_ProjectReferencePackageVersion)' != ''">
     <PackageReference Include="@(ProjectReference -> '%(Filename)')" Version="$(_ProjectReferencePackageVersion)" />
     <ProjectReference Remove="@(ProjectReference)" />
   </ItemGroup>

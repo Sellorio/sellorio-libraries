@@ -1,0 +1,25 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>netstandard2.0</TargetFramework>
+    <Nullable>enable</Nullable>
+    <LangVersion>latest</LangVersion>
+    <IsPackable>true</IsPackable>
+    <IncludeBuildOutput>false</IncludeBuildOutput>
+    <NoPackageAnalysis>true</NoPackageAnalysis>
+    <DisableProjectReferencePackageConversion>true</DisableProjectReferencePackageConversion>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Roslynator.Analyzers" Version="4.15.0">
+      <PrivateAssets>all</PrivateAssets>
+      <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+    </PackageReference>
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\Sellorio.Analyzers.CodeAnalysis\Sellorio.Analyzers.CodeAnalysis.csproj" IncludeAssets="all" PrivateAssets="none" />
+    <ProjectReference Include="..\Sellorio.Analyzers.CodeFixes\Sellorio.Analyzers.CodeFixes.csproj" IncludeAssets="all" PrivateAssets="none" />
+  </ItemGroup>
+
+</Project>
