@@ -67,7 +67,10 @@ jobs:
           New-Item -ItemType Directory -Force -Path $packageOutput | Out-Null
 
           $projects = Get-ChildItem -Path $root -Recurse -Filter *.csproj -File |
-            Where-Object { $_.FullName -notmatch '[\\/](bin|obj)[\\/]' } |
+            Where-Object {
+              $_.FullName -notmatch '[\\/](bin|obj)[\\/]' -and
+              -not $_.BaseName.EndsWith('Tests', [System.StringComparison]::Ordinal)
+            } |
             Sort-Object FullName
 
           if (-not $projects) {
