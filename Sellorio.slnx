@@ -11,6 +11,8 @@
   <Project Path="Sellorio.Analyzers.CodeFixes/Sellorio.Analyzers.CodeFixes.csproj" Id="fa74658d-0502-46df-a0cb-00b2b319578a" />
   <Project Path="Sellorio.Analyzers.Tests/Sellorio.Analyzers.Tests.csproj" Id="3d78b32a-1a70-44be-be0a-36089d00bfe6" />
   <Project Path="Sellorio.Analyzers/Sellorio.Analyzers.csproj" Id="1f4df588-fd18-4bac-9ee6-d399a6258849" />
+  <Project Path="Sellorio.AutoMapping.Tests/Sellorio.AutoMapping.Tests.csproj" Id="1533871e-8a36-4494-ad55-18f83d1265eb" />
+  <Project Path="Sellorio.AutoMapping/Sellorio.AutoMapping.csproj" Id="7aa1dd8f-843c-4619-b55c-2dd9eab00bf8" />
   <Project Path="Sellorio.Blazor.Components/Sellorio.Blazor.Components.csproj" Id="6fa3a916-d182-46e9-b137-a21cf2c40b95" />
   <Project Path="Sellorio.Clients.Rest/Sellorio.Clients.Rest.csproj" Id="b55b3dae-084f-436d-8580-982fc9630627" />
   <Project Path="Sellorio.Extensions.AspNetCore/Sellorio.Extensions.AspNetCore.csproj" Id="d7d492fd-9b98-47a3-8cc5-a874f1b1cc5d" />

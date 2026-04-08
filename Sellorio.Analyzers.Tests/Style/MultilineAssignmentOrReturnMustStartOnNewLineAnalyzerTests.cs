@@ -198,6 +198,109 @@ public class TestClass
     }
 
     [Fact]
+    public async Task NoDiagnostic_WhenObjectInitializerFollowsSingleLineConstruction()
+    {
+        var source = @"
+public class TestClass
+{
+    public object Create(int first, int second)
+    {
+        return new TestObject(first, second)
+        {
+            Total = first + second,
+        };
+    }
+
+    private sealed class TestObject
+    {
+        public TestObject(int first, int second)
+        {
+        }
+
+        public int Total { get; set; }
+    }
+}";
+
+        await VerifyCS.VerifyAnalyzerAsync(source);
+    }
+
+    [Fact]
+    public async Task Diagnostic_WhenObjectInitializerFollowsMultilineConstruction()
+    {
+        var source = @"
+public class TestClass
+{
+    public object Create(int first, int second)
+    {
+        return {|SE0021:new TestObject(
+            first,
+            second)
+        {
+            Total = first + second,
+        }|};
+    }
+
+    private sealed class TestObject
+    {
+        public TestObject(int first, int second)
+        {
+        }
+
+        public int Total { get; set; }
+    }
+}";
+
+        await VerifyCS.VerifyAnalyzerAsync(source);
+    }
+
+    [Fact]
+    public async Task NoDiagnostic_WhenLambdaBlockStartsAfterArrow()
+    {
+        var source = @"
+using System;
+
+public class TestClass
+{
+    public Func<int, int> Create()
+    {
+        return value =>
+        {
+            return value + 1;
+        };
+    }
+}";
+
+        await VerifyCS.VerifyAnalyzerAsync(source);
+    }
+
+    [Fact]
+    public async Task NoDiagnostic_WhenWithExpressionFollowsSingleLineTarget()
+    {
+        var source = @"
+namespace System.Runtime.CompilerServices
+{
+    public sealed class IsExternalInit
+    {
+    }
+}
+
+public record TestRecord(int Value, int OtherValue);
+
+public class TestClass
+{
+    public TestRecord Update(TestRecord value)
+    {
+        return value with
+        {
+            OtherValue = value.Value + 1,
+        };
+    }
+}";
+
+        await VerifyCS.VerifyAnalyzerAsync(source);
+    }
+
+    [Fact]
     public async Task NoDiagnostic_WhenMultilineReturnExpressionAlreadyStartsOnNewLine()
     {
         var source = @"
@@ -212,6 +315,36 @@ public class TestClass
     }
 
     private static int Combine(int first, int second) => first + second;
+}";
+
+        await VerifyCS.VerifyAnalyzerAsync(source);
+    }
+
+    [Fact]
+    public async Task Diagnostic_WhenMultilineObjectInitializerIsntTheStartOfTheExpression()
+    {
+        var source = @"
+public class TestClass
+{
+    public int First { get; set; }
+    public int Second { get; set; }
+
+    public TestClass(int first, int second)
+    {
+        First = first;
+        Second = second;
+    }
+
+    public static int Combine(int first, int second)
+    {
+        return {|SE0021:Combine(new TestClass(first, second)
+        {
+            First = first,
+            Second = second
+        })|};
+    }
+
+    private static int Combine(TestClass input) => input.First + input.Second;
 }";
 
         await VerifyCS.VerifyAnalyzerAsync(source);
