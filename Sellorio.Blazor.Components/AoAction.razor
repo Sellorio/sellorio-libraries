@@ -1,0 +1,22 @@
+﻿@inherits Base.AoDisableComponent
+
+<AoTooltip Text="@Tooltip" TooltipContent="TooltipContent" Block>
+	<MudMenuItem Href="@Href" Target="@(Href == null ? null : "_blank")" Label="@Title" OnClick="OnClick" Disabled="DisableContent" />
+</AoTooltip>
+
+@code {
+	[Parameter, EditorRequired]
+	public string Title { get; set; }
+
+	[Parameter]
+	public string? Tooltip { get; set; }
+
+	[Parameter]
+	public string? Href { get; set; }
+
+	[Parameter]
+	public RenderFragment? TooltipContent { get; set; }
+
+	[Parameter]
+	public EventCallback OnClick { get; set; }
+}

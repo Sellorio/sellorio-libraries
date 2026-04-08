@@ -1,0 +1,33 @@
+﻿@typeparam T
+@inherits Base.AoDisableComponent
+
+<div class="ao-multi-switch">
+	@foreach (var o in Options)
+	{
+		var option = o;
+
+		<button class="@("option" + (Equals(option, SelectedOption) ? " selected" : ""))"
+				type="button"
+			    disabled="@(DisableContent || DisabledFunc?.Invoke(option) == true)"
+				@onclick="() => { SelectedOption = option; return SelectedOptionChanged.InvokeAsync(option); }">
+			@(LabelFunc == null ? option?.ToString() : LabelFunc.Invoke(option))
+		</button>
+	}
+</div>
+
+@code {
+	[Parameter]
+	public Func<T, string>? LabelFunc { get; set; }
+
+	[Parameter]
+	public Func<T, bool>? DisabledFunc { get; set; }
+
+	[Parameter, EditorRequired]
+	public required IList<T> Options { get; set; }
+
+	[Parameter]
+	public required T? SelectedOption { get; set; }
+
+	[Parameter]
+	public EventCallback<T> SelectedOptionChanged { get; set; }
+}

@@ -1,0 +1,19 @@
+.ao-infinite-scroll {
+	position: relative;
+}
+
+.ao-infinite-scroll .page-placeholder {
+	width: 100%;
+	min-height: 1px;
+}
+
+.ao-infinite-scroll .back-to-top-button {
+	position: fixed;
+	right: 24px;
+	bottom: 24px;
+	z-index: 1000;
+}
+
+.ao-panel + .ao-infinite-scroll {
+	margin-top: 16px;
+}

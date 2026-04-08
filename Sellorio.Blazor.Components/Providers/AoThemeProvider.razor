@@ -1,0 +1,27 @@
+﻿<MudThemeProvider Theme="theme" />
+
+@code {
+	readonly MudTheme theme = new()
+	{
+		Typography = new()
+		{
+			H1 = new H1Typography
+			{
+				FontSize = "2.5rem"
+			},
+			H2 = new H2Typography
+			{
+				FontSize = "2.0rem"
+			},
+			H3 = new H3Typography
+			{
+				FontSize = "1.7rem"
+			},
+			H4 = new H4Typography
+			{
+				FontSize = "1.3rem",
+				FontWeight = "bold"
+			}
+		}
+	};
+}

@@ -1,0 +1,30 @@
+﻿@using Sellorio.Results.Messages
+
+@if (Result != null && Result.Messages.Count != 0)
+{
+	var isFirst = true;
+
+	<div class="ao-result-messages">
+		@foreach (var message in Result.Messages)
+		{
+			var severity = message.Severity switch
+			{
+				ResultMessageSeverity.Critical or ResultMessageSeverity.Error or ResultMessageSeverity.NotFound => Severity.Error,
+				ResultMessageSeverity.Warning => Severity.Warning,
+				ResultMessageSeverity.Information => Severity.Info,
+				_ => Severity.Normal
+			};
+
+			<MudAlert Severity="severity" Square Class="@(isFirst ? "mt-3" : null)">
+				@message.Text
+			</MudAlert>
+
+			isFirst = false;
+		}
+	</div>
+}
+
+@code {
+	[Parameter]
+	public IResult? Result { get; set; }
+}

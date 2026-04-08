@@ -1,0 +1,40 @@
+﻿.ao-status-strip-item {
+    flex-grow: var(--value);
+    height: 8px;
+}
+
+.ao-status-strip-item.interactive:hover {
+    opacity: 0.7;
+}
+
+.ao-status-strip-item.primary {
+    background: var(--mud-palette-primary);
+}
+
+.ao-status-strip-item.secondary {
+    background: var(--mud-palette-secondary);
+}
+
+.ao-status-strip-item.success {
+    background: var(--mud-palette-success);
+}
+
+.ao-status-strip-item.error {
+    background: var(--mud-palette-error);
+}
+
+.ao-status-strip-item.warning {
+    background: var(--mud-palette-warning);
+}
+
+.ao-status-strip-item.info {
+    background: var(--mud-palette-info);
+}
+
+.ao-status-strip-item.default {
+    background: #888;
+}
+
+.ao-status-strip-item ::deep .mud-tooltip-root {
+    height: 100%;
+}

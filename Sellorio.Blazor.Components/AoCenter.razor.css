@@ -1,0 +1,12 @@
+﻿.ao-center-h, .ao-center-v {
+    display: flex;
+    height: 100%;
+}
+
+.ao-center-h {
+    justify-content: center;
+}
+
+.ao-center-v {
+    align-items: center;
+}

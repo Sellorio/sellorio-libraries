@@ -1,0 +1,15 @@
+﻿@using Sellorio.Results.Messages
+
+<AoResultMessages Result="result" />
+
+@code {
+	Result? result;
+
+	[Parameter, EditorRequired]
+	public string Message { get; set; }
+
+	protected override void OnInitialized()
+	{
+		result = ResultMessage.Error(Message);
+	}
+}

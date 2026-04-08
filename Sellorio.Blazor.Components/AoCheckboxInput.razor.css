@@ -1,0 +1,11 @@
+﻿.ao-checkbox-input {
+    position: relative;
+    top: 4px;
+    display: block;
+    margin-left: auto;
+    width: 24px;
+}
+
+.ao-checkbox-input ::deep .mud-icon-button {
+    padding: 0;
+}

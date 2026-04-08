@@ -1,0 +1,306 @@
+@typeparam TItem
+@implements IAsyncDisposable
+
+<div class="ao-infinite-scroll" @ref="rootElement">
+	<AoResultMessages Result="resultToShow" />
+
+	@if (initialLoadResult == null)
+	{
+		<AoLoader />
+	}
+	else if (!initialLoadResult.WasSuccess)
+	{
+	}
+	else if (totalCount == 0)
+	{
+		@EmptyContent
+	}
+	else
+	{
+		@for (var pageNumber = 0; pageNumber < totalPages; pageNumber++)
+		{
+			var page = GetOrCreatePageState(pageNumber);
+
+			if (page.Items == null)
+			{
+				<div class="page-placeholder"
+					 data-page-number="@pageNumber"
+					 data-loaded="false"
+					 style="height:@($"{page.Height}px")"></div>
+			}
+			else
+			{
+				<div class="page-content"
+					 data-page-number="@pageNumber"
+					 data-loaded="true">
+					@PageContent(page.Items)
+				</div>
+			}
+		}
+	}
+
+	@if (ShowBackToTopButton && isBackToTopVisible)
+	{
+		<MudFab Class="back-to-top-button"
+				StartIcon="@Icons.Material.Filled.KeyboardArrowUp"
+				Color="Color.Primary"
+				OnClick="BackToTopAsync" />
+	}
+</div>
+
+@code {
+	sealed class PageState(int pageNumber, double height)
+	{
+		public int PageNumber { get; } = pageNumber;
+		public double Height { get; set; } = height;
+		public IReadOnlyList<TItem>? Items { get; set; }
+	}
+
+	[Inject]
+	public required IJSRuntime JSRuntime { get; set; }
+
+	[Parameter, EditorRequired]
+	public required Func<int, int, Task<ValueResult<PagedListWithCount<TItem>>>> LoadPageAsync { get; set; }
+
+	[Parameter, EditorRequired]
+	public required RenderFragment<IReadOnlyList<TItem>> PageContent { get; set; }
+
+	[Parameter]
+	public RenderFragment? EmptyContent { get; set; }
+
+	[Parameter]
+	public int PageSize { get; set; } = 24;
+
+	[Parameter]
+	public int PreloadPageBuffer { get; set; } = 1;
+
+	[Parameter]
+	public int UnloadPageBuffer { get; set; } = 2;
+
+	[Parameter]
+	public double EstimatedPageHeight { get; set; } = 1200;
+
+	[Parameter]
+	public bool ShowBackToTopButton { get; set; }
+
+	[Parameter]
+	public int BackToTopVisibilityOffset { get; set; } = 600;
+
+	readonly Dictionary<int, PageState> pages = [];
+	readonly HashSet<int> loadingPageNumbers = [];
+	DotNetObjectReference<AoInfiniteScroll<TItem>>? dotNetReference;
+	ElementReference rootElement;
+	IJSObjectReference? module;
+	ValueResult<PagedListWithCount<TItem>>? initialLoadResult;
+	IResult? latestLoadResult;
+	int currentVersion;
+	int totalPages;
+	int totalCount;
+	bool isBackToTopVisible;
+	bool isJsInitialized;
+
+	IResult? resultToShow => latestLoadResult ?? initialLoadResult;
+
+	protected override async Task OnInitializedAsync()
+	{
+		await ReloadAsync(false);
+	}
+
+	protected override async Task OnAfterRenderAsync(bool firstRender)
+	{
+		if (firstRender)
+		{
+			module =
+				await JSRuntime.InvokeAsync<IJSObjectReference>(
+					"import",
+					"_content/Sellorio.Blazor.Components/js/aoInfiniteScroll.js");
+
+			dotNetReference = DotNetObjectReference.Create(this);
+			await module.InvokeVoidAsync("initialize", rootElement, dotNetReference, BackToTopVisibilityOffset);
+			isJsInitialized = true;
+		}
+
+		if (isJsInitialized)
+		{
+			await module!.InvokeVoidAsync("refresh", rootElement);
+		}
+	}
+
+	public Task ResetAsync()
+	{
+		return ReloadAsync();
+	}
+
+	[JSInvokable]
+	public async Task UpdateVisibleRangeAsync(int startPageNumber, int endPageNumber)
+	{
+		if (initialLoadResult is not { WasSuccess: true } || totalPages == 0)
+		{
+			return;
+		}
+
+		var loadStart = Math.Max(0, startPageNumber - PreloadPageBuffer);
+		var loadEnd = Math.Min(totalPages - 1, endPageNumber + PreloadPageBuffer);
+		var version = currentVersion;
+
+		for (var pageNumber = loadStart; pageNumber <= loadEnd; pageNumber++)
+		{
+			await EnsurePageLoadedAsync(pageNumber, version);
+		}
+
+		UnloadPagesOutside(
+			Math.Max(0, startPageNumber - UnloadPageBuffer),
+			Math.Min(totalPages - 1, endPageNumber + UnloadPageBuffer));
+
+		await InvokeAsync(StateHasChanged);
+	}
+
+	[JSInvokable]
+	public Task SetPageHeightAsync(int pageNumber, double height)
+	{
+		if (pageNumber < 0 || height <= 0)
+		{
+			return Task.CompletedTask;
+		}
+
+		GetOrCreatePageState(pageNumber).Height = height;
+		return Task.CompletedTask;
+	}
+
+	[JSInvokable]
+	public Task SetBackToTopVisibleAsync(bool visible)
+	{
+		if (isBackToTopVisible == visible)
+		{
+			return Task.CompletedTask;
+		}
+
+		isBackToTopVisible = visible;
+		return InvokeAsync(StateHasChanged);
+	}
+
+	async Task BackToTopAsync()
+	{
+		await ReloadAsync();
+	}
+
+	async Task ReloadAsync(bool scrollToTop = true)
+	{
+		currentVersion++;
+		pages.Clear();
+		loadingPageNumbers.Clear();
+		initialLoadResult = null;
+		latestLoadResult = null;
+		totalPages = 0;
+		totalCount = 0;
+		isBackToTopVisible = false;
+
+		await InvokeAsync(StateHasChanged);
+
+		if (scrollToTop && isJsInitialized)
+		{
+			await module!.InvokeVoidAsync("scrollToTop");
+		}
+
+		var version = currentVersion;
+		await EnsurePageLoadedAsync(0, version, true);
+
+		await InvokeAsync(StateHasChanged);
+	}
+
+	async Task EnsurePageLoadedAsync(int pageNumber, int version, bool isInitialLoad = false)
+	{
+		if (pageNumber < 0 || (totalPages > 0 && pageNumber >= totalPages))
+		{
+			return;
+		}
+
+		var page = GetOrCreatePageState(pageNumber);
+
+		if (page.Items != null || !loadingPageNumbers.Add(pageNumber))
+		{
+			return;
+		}
+
+		try
+		{
+			var result = await LoadPageAsync(pageNumber + 1, PageSize);
+
+			if (version != currentVersion)
+			{
+				return;
+			}
+
+			latestLoadResult = result;
+
+			if (isInitialLoad)
+			{
+				initialLoadResult = result;
+			}
+
+			if (!result.WasSuccess)
+			{
+				return;
+			}
+
+			totalCount = result.Value.TotalItems;
+			totalPages = (int)Math.Ceiling(totalCount / (double)PageSize);
+			page.Items = [.. result.Value.Items];
+
+			for (var knownPageNumber = 0; knownPageNumber < totalPages; knownPageNumber++)
+			{
+				GetOrCreatePageState(knownPageNumber);
+			}
+		}
+		finally
+		{
+			loadingPageNumbers.Remove(pageNumber);
+		}
+	}
+
+	void UnloadPagesOutside(int minPageNumber, int maxPageNumber)
+	{
+		foreach (var page in pages.Values)
+		{
+			if (page.PageNumber < minPageNumber || page.PageNumber > maxPageNumber)
+			{
+				page.Items = null;
+			}
+		}
+	}
+
+	PageState GetOrCreatePageState(int pageNumber)
+	{
+		if (!pages.TryGetValue(pageNumber, out var page))
+		{
+			page = new PageState(pageNumber, GetEstimatedPageHeight());
+			pages.Add(pageNumber, page);
+		}
+
+		return page;
+	}
+
+	double GetEstimatedPageHeight()
+	{
+		var knownHeights = pages.Values.Select(x => x.Height).Where(x => x > 0).ToArray();
+		return knownHeights.Length == 0 ? EstimatedPageHeight : knownHeights.Average();
+	}
+
+	public async ValueTask DisposeAsync()
+	{
+		if (module != null)
+		{
+			try
+			{
+				await module.InvokeVoidAsync("dispose", rootElement);
+			}
+			catch
+			{
+			}
+
+			await module.DisposeAsync();
+		}
+
+		dotNetReference?.Dispose();
+	}
+}

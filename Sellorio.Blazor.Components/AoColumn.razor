@@ -1,0 +1,14 @@
+﻿<div class="ao-column" style="@($"--column-weight:{Weight};--column-min-width:{MinWidth}px")">
+	@ChildContent
+</div>
+
+@code {
+	[Parameter]
+	public int Weight { get; set; }
+
+	[Parameter]
+	public int MinWidth { get; set; }
+
+	[Parameter]
+	public RenderFragment? ChildContent { get; set; }
+}

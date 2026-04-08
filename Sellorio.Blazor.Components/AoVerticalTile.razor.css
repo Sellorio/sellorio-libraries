@@ -1,0 +1,38 @@
+﻿.ao-vertical-tile {
+    width: 300px;
+}
+
+.ao-vertical-tile .title {
+    padding: 1px 10px;
+    font-size: 24px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.ao-vertical-tile .image {
+    display: block;
+    margin: 0 5px;
+    width: calc(100% - 10px);
+}
+
+.ao-vertical-tile ::deep .ao-image-placeholder {
+    margin: 0 5px;
+    width: calc(100% - 10px);
+}
+
+.ao-vertical-tile ::deep .ao-image-placeholder {
+    aspect-ratio: 1/1;
+}
+
+.ao-vertical-tile .content {
+    padding: 2px 7px 5px;
+}
+
+.ao-vertical-tile.clickable {
+    cursor: pointer;
+}
+
+.ao-vertical-tile ::deep .mud-paper {
+    overflow: hidden;
+}

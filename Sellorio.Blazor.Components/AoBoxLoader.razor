@@ -1,0 +1,38 @@
+﻿@using Sellorio.Blazor.Components.Providers
+
+<AoDisableStateProvider @ref="disableStateProvider">
+	<div class="ao-box-loader">
+		<div class="loader">
+			@if (Loading)
+			{
+				<AoLoader />
+			}
+		</div>
+		<div class="@("content" + (Loading ? " loading" : ""))">
+			@ChildContent
+		</div>
+	</div>
+</AoDisableStateProvider>
+
+@code {
+	AoDisableStateProvider? disableStateProvider;
+
+	[Parameter]
+	public bool Loading { get; set; }
+
+	[Parameter]
+	public RenderFragment? ChildContent { get; set; }
+
+	protected override void OnParametersSet()
+	{
+		disableStateProvider?.UpdateState(Loading);
+	}
+
+	protected override void OnAfterRender(bool firstRender)
+	{
+		if (firstRender)
+		{
+			disableStateProvider!.UpdateState(Loading);
+		}
+	}
+}

@@ -1,0 +1,15 @@
+﻿.ao-button.no-label ::deep .mud-button {
+    padding: 6px;
+}
+
+.ao-button + .ao-button {
+    margin-left: 16px;
+}
+
+.ao-button ::deep .mud-button {
+    min-width: unset;
+}
+
+.ao-button ::deep .mud-icon-root {
+    display: block;
+}

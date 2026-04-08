@@ -1,0 +1,89 @@
+﻿@inherits Base.AoDisableComponent
+
+<span class="@("ao-button" + (Label == null ? " no-label" : ""))">
+	<MudButton Variant="GetButtonVariant()" Color="GetButtonColor()" ButtonType="ButtonType.Button" Disabled="DisableContent || isExecuting || Loading" OnClick="OnClick">
+		<MudGrid>
+			@if (Label != null)
+			{
+				<MudItem>@Label</MudItem>
+			}
+
+			@if (isExecuting || Loading)
+			{
+				<MudItem>
+					<MudProgressCircular Size="Size.Small" Indeterminate />
+				</MudItem>
+			}
+			else if (Icon != null)
+			{
+				<MudItem>
+					<MudIcon Icon="@Icon.Value.ToSvg()" />
+				</MudItem>
+			}
+		</MudGrid>
+	</MudButton>
+</span>
+
+@code {
+	bool isExecuting;
+
+	[Parameter]
+	public string? Label { get; set; }
+
+	[Parameter]
+	public Icon? Icon { get; set; }
+
+	[Parameter]
+	public EventCallback OnClick { get; set; }
+
+	[Parameter]
+	public bool Primary { get; set; }
+
+	[Parameter]
+	public bool Secondary { get; set; }
+
+	[Parameter]
+	public bool Green { get; set; }
+
+	[Parameter]
+	public bool Yellow { get; set; }
+
+	[Parameter]
+	public bool Red { get; set; }
+
+	[Parameter]
+	public bool NoBackground { get; set; }
+
+	[Parameter]
+	public bool NoBorder { get; set; }
+
+	[Parameter]
+	public bool Loading { get; set; }
+
+	async Task HandleClick()
+	{
+		isExecuting = true;
+		await OnClick.InvokeAsync();
+		isExecuting = false;
+	}
+
+	private Color GetButtonColor()
+	{
+		if (Primary) return Color.Primary;
+		if (Secondary) return Color.Secondary;
+		if (Green) return Color.Success;
+		if (Yellow) return Color.Warning;
+		if (Red) return Color.Error;
+		return Color.Default;
+	}
+
+	private Variant GetButtonVariant()
+	{
+		if (NoBorder)
+		{
+			return Variant.Text;
+		}
+
+		return NoBackground ? Variant.Outlined : Variant.Filled;
+	}
+}

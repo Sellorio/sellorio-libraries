@@ -1,0 +1,9 @@
+﻿.ao-columns .content {
+    display: flex;
+    flex-wrap: wrap;
+    margin: calc(var(--column-spacing) * -1);
+}
+
+.ao-columns .content ::deep > * {
+    margin: var(--column-spacing);
+}

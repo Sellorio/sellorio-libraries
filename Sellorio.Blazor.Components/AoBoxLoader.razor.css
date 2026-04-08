@@ -1,0 +1,22 @@
+﻿.ao-box-loader {
+    position: relative;
+}
+
+.loader {
+    position: absolute;
+    top: 0;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    max-height: 80vh;
+    z-index: 1;
+    pointer-events: none;
+}
+
+.content.loading {
+    min-height: 200px;
+    opacity: 0.5;
+}

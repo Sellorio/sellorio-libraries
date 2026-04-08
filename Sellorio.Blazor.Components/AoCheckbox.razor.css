@@ -1,0 +1,8 @@
+﻿.ao-checkbox {
+    margin-right: 20px;
+}
+
+.ao-checkbox ::deep .mud-input-control,
+.ao-checkbox ::deep .mud-input-control-input-container {
+    display: inline;
+}

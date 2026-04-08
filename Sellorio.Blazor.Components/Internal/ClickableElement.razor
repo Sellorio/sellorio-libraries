@@ -1,0 +1,45 @@
+﻿@inherits Base.AoDisableComponent
+
+@if (DisableContent)
+{
+	@ChildContent
+}
+else if (Href == null)
+{
+	if (OnClick.HasDelegate)
+	{
+		<div class="clickable" @onclick="OnClick" tabindex="0">
+			@ChildContent
+		</div>
+	}
+	else
+	{
+		@ChildContent
+	}
+}
+else
+{
+	if (OnClick.HasDelegate)
+	{
+		<a class="clickable block" href="@Href" @onclick="OnClick" @onclick:preventDefault>
+			@ChildContent
+		</a>
+	}
+	else
+	{
+		<a class="block" href="@Href">
+			@ChildContent
+		</a>
+	}
+}
+
+@code {
+	[Parameter]
+	public string? Href { get; set; }
+
+	[Parameter]
+	public RenderFragment? ChildContent { get; set; }
+
+	[Parameter]
+	public EventCallback OnClick { get; set; }
+}

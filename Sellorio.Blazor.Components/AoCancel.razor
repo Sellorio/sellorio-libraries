@@ -1,0 +1,12 @@
+﻿<AoButton Label="@Label" Secondary NoBackground OnClick="OnClick" Disabled="Disabled" />
+
+@code {
+	[Parameter]
+	public string Label { get; set; } = "Cancel";
+
+	[Parameter]
+	public bool Disabled { get; set; }
+
+	[Parameter]
+	public EventCallback OnClick { get; set; }
+}

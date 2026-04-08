@@ -7,7 +7,9 @@
     <File Path=".gitignore" />
     <File Path="Directory.Build.targets" />
   </Folder>
+  <Project Path="Sellorio.Blazor.Components/Sellorio.Blazor.Components.csproj" Id="6fa3a916-d182-46e9-b137-a21cf2c40b95" />
   <Project Path="Sellorio.Clients.Rest/Sellorio.Clients.Rest.csproj" Id="b55b3dae-084f-436d-8580-982fc9630627" />
+  <Project Path="Sellorio.Extensions.AspNetCore/Sellorio.Extensions.AspNetCore.csproj" Id="d7d492fd-9b98-47a3-8cc5-a874f1b1cc5d" />
   <Project Path="Sellorio.Results/Sellorio.Results.csproj" />
   <Project Path="Sellorio.Validation/Sellorio.Validation.csproj" />
 </Solution>

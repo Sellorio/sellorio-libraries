@@ -1,0 +1,21 @@
+﻿@using Sellorio.Blazor.Components.Providers
+@inherits Base.AoDisableComponent
+
+<MudMenu Dense Disabled="DisableContent || Loading">
+	<ActivatorContent>
+		<AoButton Icon="Icon.Menu" Primary Loading="Loading" />
+	</ActivatorContent>
+	<ChildContent>
+		<AoDisableStateProvider>
+			@ChildContent
+		</AoDisableStateProvider>
+	</ChildContent>
+</MudMenu>
+
+@code {
+	[Parameter]
+	public bool Loading { get; set; }
+
+	[Parameter]
+	public RenderFragment? ChildContent { get; set; }
+}

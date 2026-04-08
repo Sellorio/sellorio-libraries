@@ -1,0 +1,13 @@
+﻿<div class="@("ao-grid-list" + (ClickableRows ? " clickable-rows" : ""))">
+	<MudSimpleTable>
+		@ChildContent
+	</MudSimpleTable>
+</div>
+
+@code {
+	[Parameter]
+	public bool ClickableRows { get; set; }
+
+	[Parameter]
+	public RenderFragment? ChildContent { get; set; }
+}

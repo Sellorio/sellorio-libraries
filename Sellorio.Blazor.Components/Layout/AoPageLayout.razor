@@ -1,0 +1,75 @@
+﻿@using Microsoft.AspNetCore.Components.Authorization
+@using Microsoft.AspNetCore.Components.Web
+@inject NavigationManager NavigationManager
+@inherits Base.AoDisableComponent
+
+<PageTitle>Audio Oracle</PageTitle>
+
+<div class="ao-page-layout">
+	<MudLayout>
+		<MudAppBar>
+			@if (NavContent != null)
+			{
+				<MudIconButton Class="mr-4" Icon="@Icons.Material.Filled.Menu" Color="Color.Secondary" Variant="Variant.Filled" Edge="Edge.Start" DropShadow="false" OnClick="() => isMenuOpen = !isMenuOpen" Disabled="DisableContent" />
+			}
+
+			<MudGrid Spacing="0" Style="align-items:center">
+				<MudItem Style="flex-grow:1">
+					<a href="/">
+						<AoHeading1>Audio Oracle</AoHeading1>
+					</a>
+				</MudItem>
+
+				@if (OnLogoutRequested.HasDelegate)
+				{
+					<MudItem>
+						<AuthorizeView>
+							<MudIconButton Icon="@Icons.Material.Filled.Logout" Color="Color.Secondary" Variant="Variant.Filled" Edge="Edge.End" DropShadow="false" OnClick="OnLogoutRequested" Disabled="DisableContent" />
+						</AuthorizeView>
+					</MudItem>
+				}
+			</MudGrid>
+		</MudAppBar>
+
+		@if (NavContent != null)
+		{
+			<MudDrawer @bind-Open="isMenuOpen">
+				<MudNavMenu>
+					@NavContent
+				</MudNavMenu>
+			</MudDrawer>
+		}
+
+		<MudMainContent>
+			@if (NoPadding)
+			{
+				@ChildContent
+			}
+			else
+			{
+				<div class="layout-padding-wrapper">
+					@ChildContent
+				</div>
+			}
+		</MudMainContent>
+	</MudLayout>
+</div>
+
+@code {
+	bool isMenuOpen = true;
+
+	[Parameter, EditorRequired]
+	public required string ApplicationName { get; set; }
+
+	[Parameter]
+	public bool NoPadding { get; set; }
+
+	[Parameter]
+	public RenderFragment? ChildContent { get; set; }
+
+	[Parameter]
+	public RenderFragment? NavContent { get; set; }
+
+	[Parameter]
+	public EventCallback OnLogoutRequested { get; set; }
+}

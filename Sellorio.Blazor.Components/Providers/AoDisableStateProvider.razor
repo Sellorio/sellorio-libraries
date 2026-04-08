@@ -1,0 +1,26 @@
+﻿@using Sellorio.Blazor.Components.Providers.DisableState
+@inject IDialogService DialogService
+
+<CascadingValue TValue="DisableStateScope" Value="disableStateScope" IsFixed>
+	<CascadingValue TValue="IDialogProvider" Value="disableStateScope!.DialogProvider" IsFixed ChildContent="ChildContent" />
+</CascadingValue>
+
+@code {
+	DisableStateScope? disableStateScope;
+
+	[CascadingParameter]
+	public IDisableStateScope? ParentScope { get; set; }
+
+	[Parameter]
+	public RenderFragment? ChildContent { get; set; }
+
+	protected override void OnInitialized()
+	{
+		disableStateScope = new(ParentScope, DialogService);
+	}
+
+	public void UpdateState(bool isDisabled)
+	{
+		disableStateScope?.UpdateState(isDisabled);
+	}
+}

@@ -1,0 +1,7 @@
+﻿.ao-result-messages {
+    margin: 16px 0;
+}
+
+.ao-result-messages:first-child {
+    margin-top: 0;
+}

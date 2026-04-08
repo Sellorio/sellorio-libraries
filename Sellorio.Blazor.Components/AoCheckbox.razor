@@ -1,0 +1,22 @@
+﻿@inherits Base.AoDisableComponent
+
+<span class="ao-checkbox">
+	<MudCheckBox T="bool" Label="@Label" Value="Value" ValueChanged="OnValueChanged" Disabled="DisableContent" />
+</span>
+
+@code {
+	[Parameter]
+	public string? Label { get; set; }
+
+	[Parameter]
+	public bool Value { get; set; }
+
+	[Parameter]
+	public EventCallback<bool> ValueChanged { get; set; }
+
+	private async Task OnValueChanged(bool newValue)
+	{
+		Value = newValue;
+		await ValueChanged.InvokeAsync(newValue);
+	}
+}

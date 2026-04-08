@@ -1,0 +1,5 @@
+﻿.ao-dialog-layout ::deep .mud-dialog-content {
+    min-width: 400px;
+    width: var(--width);
+    max-width: 100%;
+}

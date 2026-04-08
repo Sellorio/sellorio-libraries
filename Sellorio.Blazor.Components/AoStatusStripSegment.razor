@@ -1,0 +1,61 @@
+﻿@inherits Base.AoDisableComponent
+
+@if (DisableContent)
+{
+	<div class="@GetClass()" style="@($"--value:{Size}")"></div>
+}
+else
+{
+	<div class="@GetClass()" style="@($"--value:{Size}")" @onclick="OnClick" @onclick:stopPropagation="OnClick.HasDelegate">
+		@if (Tooltip != null)
+		{
+			<AoTooltip Text="@Tooltip" Block />
+		}
+	</div>
+}
+
+@code {
+	[Parameter, EditorRequired]
+	public byte Size { get; set; }
+
+	[Parameter]
+	public bool Primary { get; set; }
+
+	[Parameter]
+	public bool Secondary { get; set; }
+
+	[Parameter]
+	public bool Success { get; set; }
+
+	[Parameter]
+	public bool Error { get; set; }
+
+	[Parameter]
+	public bool Warning { get; set; }
+
+	[Parameter]
+	public bool Information { get; set; }
+
+	[Parameter]
+	public bool Default { get; set; }
+
+	[Parameter]
+	public string? Tooltip { get; set; }
+
+	[Parameter]
+	public EventCallback OnClick { get; set; }
+
+	private string GetClass()
+	{
+		var result = "ao-status-strip-item";
+		if (!DisableContent && (OnClick.HasDelegate || Tooltip != null)) result += " interactive";
+		if (Primary) result += " primary";
+		if (Secondary) result += " secondary";
+		if (Success) result += " success";
+		if (Error) result += " error";
+		if (Warning) result += " warning";
+		if (Information) result += " info";
+		if (Default) result += " default";
+		return result;
+	}
+}

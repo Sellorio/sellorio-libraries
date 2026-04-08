@@ -1,0 +1,11 @@
+﻿@inherits Base.AoDisableComponent
+
+<MudNavLink Href="@Href" Disabled="DisableContent">@Label</MudNavLink>
+
+@code {
+	[Parameter]
+	public string? Href { get; set; }
+
+	[Parameter]
+	public string? Label { get; set; }
+}

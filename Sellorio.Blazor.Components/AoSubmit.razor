@@ -1,0 +1,21 @@
+﻿@{
+	bool isSubmitting = Form != null && Form.IsSubmitting;
+}
+
+<AoButton Primary Label="@Label" Loading="isSubmitting" OnClick="HandleClick" Disabled="Form?.Disabled == true" />
+
+@code {
+	[CascadingParameter]
+	public required AoForm Form { get; set; }
+
+	[Parameter]
+	public string? Label { get; set; }
+
+	async Task HandleClick()
+	{
+		if (Form != null)
+		{
+			await Form.OnSubmitAsync();
+		}
+	}
+}

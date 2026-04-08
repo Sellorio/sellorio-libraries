@@ -1,0 +1,46 @@
+﻿@using Microsoft.AspNetCore.Components.Forms
+@inherits Base.AoDisableComponent
+
+<MudFileUpload T="IBrowserFile"
+               @ref="mudFileUpload"
+               Accept="@(Accept == null || Accept.Count == 0 ? null : string.Join(",", Accept))"
+               Files="Value"
+               FilesChanged="ValueChanged"
+               Disabled="DisableContent"
+               Style="@(Hidden ? "display:none" : "")">
+    <CustomContent>
+        <AoButton Primary Label="@(Value == null ? "Select File" : Value.Name)" />
+    </CustomContent>
+</MudFileUpload>
+
+@code {
+    MudFileUpload<IBrowserFile>? mudFileUpload;
+
+    [Parameter]
+    public IList<string>? Accept { get; set; }
+
+    [Parameter]
+    public IBrowserFile? Value { get; set; }
+
+    [Parameter]
+    public EventCallback<IBrowserFile> ValueChanged { get; set; }
+
+    [Parameter]
+    public bool Hidden { get; set; }
+
+    public async Task OpenAsync()
+    {
+        if (mudFileUpload != null)
+        {
+            await mudFileUpload.OpenFilePickerAsync();
+        }
+    }
+
+    public async Task ClearAsync()
+    {
+        if (mudFileUpload != null)
+        {
+            await mudFileUpload.ClearAsync();
+        }
+    }
+}

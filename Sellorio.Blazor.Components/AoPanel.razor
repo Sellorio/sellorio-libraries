@@ -1,0 +1,22 @@
+﻿<div class="ao-panel">
+	<MudCard Square="Constants.Square">
+		@if (Title != null)
+		{
+			<MudCardHeader>
+				<AoHeading3>@Title</AoHeading3>
+			</MudCardHeader>
+		}
+	
+		<MudCardContent>
+			@ChildContent
+		</MudCardContent>
+	</MudCard>
+</div>
+
+@code {
+	[Parameter]
+	public string? Title { get; set; }
+
+	[Parameter]
+	public RenderFragment? ChildContent { get; set; }
+}

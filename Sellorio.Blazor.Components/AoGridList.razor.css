@@ -1,0 +1,18 @@
+﻿.ao-grid-list ::deep img {
+    height: 80px;
+}
+
+.ao-grid-list ::deep .ao-image-placeholder {
+    min-width: 80px;
+    min-height: 80px;
+    max-width: 80px;
+    max-height: 80px;
+}
+
+.ao-grid-list.clickable-rows ::deep tbody > tr {
+    cursor: pointer;
+}
+
+.ao-grid-list.clickable-rows ::deep tbody > tr:hover {
+    background: rgba(128,128,128,0.2);
+}

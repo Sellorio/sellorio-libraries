@@ -1,0 +1,24 @@
+﻿@inject IJSRuntime JSRuntime
+
+<span @ref="_element">@Content</span>
+
+@code {
+	ElementReference _element;
+
+	[Parameter]
+	public string? Content { get; set; }
+
+	[Parameter]
+	public int MinSize { get; set; } = 14;
+
+	[Parameter]
+	public int MaxSize { get; set; } = 28;
+
+	protected override async Task OnAfterRenderAsync(bool firstRender)
+	{
+		if (firstRender)
+		{
+			await JSRuntime.InvokeVoidAsync("fitty", _element, new { minSize = MinSize, maxSize = MaxSize });
+		}
+	}
+}

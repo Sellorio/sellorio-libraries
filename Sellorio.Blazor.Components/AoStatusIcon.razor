@@ -1,0 +1,93 @@
+﻿@inherits Base.AoDisableComponent
+
+<MudTooltip Disabled="DisableContent">
+	<TooltipContent>
+		<div class="status-title">@(StatusTitle ?? GetFallbackStatusTitle())</div>
+
+		@if (StatusDescription != null)
+		{
+			<div class="status-description">@StatusDescription</div>
+		}
+	</TooltipContent>
+	<ChildContent>
+		@if (Loading)
+		{
+			<MudProgressCircular Size="Size.Small" Indeterminate />
+		}
+		else if (Error)
+		{
+			<MudIcon Size="Size.Small" Icon="@Icons.Material.Filled.Warning" />
+		}
+		else if (Downloading)
+		{
+			<MudIcon Size="Size.Small" Icon="@Icons.Material.Filled.Download" />
+		}
+		else if (DownloadComplete)
+		{
+			<MudIcon Size="Size.Small" Icon="@Icons.Material.Filled.DownloadDone" />
+		}
+		else if (Successful)
+		{
+			<MudIcon Size="Size.Small" Icon="@Icons.Material.Filled.Check" />
+		}
+		else if (TurnedOff)
+		{
+			<MudIcon Size="Size.Small" Icon="@Icons.Material.Filled.Close" />
+		}
+		else if (Warning)
+		{
+			<MudIcon Size="Size.Small" Icon="@Icons.Material.Filled.Warning" />
+		}
+		else
+		{
+			<MudIcon Size="Size.Small" Icon="@Icons.Material.Filled.Info" />
+		}
+	</ChildContent>
+</MudTooltip>
+
+@code {
+	[Parameter]
+	public bool Loading { get; set; }
+
+	[Parameter]
+	public bool Error { get; set; }
+
+	[Parameter]
+	public bool Downloading { get; set; }
+
+	[Parameter]
+	public bool DownloadComplete { get; set; }
+
+	[Parameter]
+	public bool Successful { get; set; }
+
+	[Parameter]
+	public bool TurnedOff { get; set; }
+
+	[Parameter]
+	public bool Warning { get; set; }
+
+	[Parameter]
+	public string? StatusTitle { get; set; }
+
+	[Parameter]
+	public string? StatusDescription { get; set; }
+
+	string GetFallbackStatusTitle()
+	{
+		if (Loading)
+			return "Loading";
+		if (Error)
+			return "Failed";
+		if (Downloading)
+			return "Downloading";
+		if (DownloadComplete)
+			return "Download Complete";
+		if (Successful)
+			return "Successful";
+		if (TurnedOff)
+			return "Turned Off";
+
+		throw new NotSupportedException();
+	}
+}

@@ -1,0 +1,49 @@
+﻿@using Sellorio.Blazor.Components.Providers
+
+<CascadingValue Value="this" IsFixed>
+	<AoDisableStateProvider @ref="disableStateProvider">
+		@if (OnValidSubmit.HasDelegate)
+		{
+			<MudForm @ref="form" Disabled="Disabled" SuppressImplicitSubmission="false" @onsubmit="OnSubmitAsync" ChildContent="ChildContent" Style="@($"max-width:{Constants.MaxFormWidth}")" />
+		}
+		else
+		{
+			<MudForm @ref="form" Disabled="Disabled" SuppressImplicitSubmission="false" ChildContent="ChildContent" Style="@($"max-width:{Constants.MaxFormWidth}")" />
+		}
+	</AoDisableStateProvider>
+</CascadingValue>
+
+@code {
+	MudForm? form;
+	AoDisableStateProvider? disableStateProvider;
+
+	public bool IsSubmitting { get; private set; }
+
+	[Parameter]
+	public EventCallback OnValidSubmit { get; set; }
+
+	[Parameter]
+	public bool Disabled { get; set; }
+
+	[Parameter]
+	public RenderFragment? ChildContent { get; set; }
+
+	internal async Task OnSubmitAsync()
+	{
+		if (!OnValidSubmit.HasDelegate || form == null)
+		{
+			return;
+		}
+
+		await form.ValidateAsync();
+
+		if (form.IsValid)
+		{
+			disableStateProvider!.UpdateState(true);
+			IsSubmitting = true;
+			await OnValidSubmit.InvokeAsync();
+			IsSubmitting = false;
+			disableStateProvider.UpdateState(false);
+		}
+	}
+}

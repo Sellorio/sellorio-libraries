@@ -1,0 +1,12 @@
+﻿.ao-column {
+    flex-grow: var(--column-weight);
+    min-width: var(--column-min-width);
+}
+
+@media (max-width: 599px) {
+    .ao-column {
+        flex-grow: 0;
+        width: calc(100% - var(--column-spacing) * 2);
+        min-width: unset;
+    }
+}

@@ -1,0 +1,13 @@
+﻿.ao-form-buttons {
+    display: flex;
+    justify-content: flex-end;
+    margin-top: 16px;
+}
+
+.ao-form-buttons ::deep .mud-button {
+    display: block;
+}
+
+.ao-form-buttons ::deep .mud-button + .mud-button {
+    margin-left: 12px;
+}

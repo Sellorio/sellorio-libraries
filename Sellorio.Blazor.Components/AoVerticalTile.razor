@@ -1,0 +1,66 @@
+﻿@inherits Base.AoDisableComponent
+
+<div class="ao-vertical-tile">
+	<ClickableElement Href="@Href" OnClick="OnClick" Disabled="DisableContent">
+		<MudPaper>
+			@if (Title != null)
+			{
+				<div class="title">@Title</div>
+			}
+
+			@if (ImageSrc != null)
+			{
+				<img class="image" src="@ImageSrc" alt="Tile Image">
+			}
+			else if (ImagePlaceholderFallback)
+			{
+				<AoImagePlaceholder />
+			}
+
+			@if (ChildContent != null)
+			{
+				<div class="content">@ChildContent</div>
+			}
+
+			@if (ActionsContent != null)
+			{
+				<div class="actions">
+					@ActionsContent
+				</div>
+			}
+
+			@if (StatusStripContent != null)
+			{
+				<AoStatusStrip>
+					@StatusStripContent
+				</AoStatusStrip>
+			}
+		</MudPaper>
+	</ClickableElement>
+</div>
+
+@code {
+	[Parameter]
+	public string? Title { get; set; }
+
+	[Parameter]
+	public string? ImageSrc { get; set; }
+
+	[Parameter]
+	public string? Href { get; set; }
+
+	[Parameter]
+	public bool ImagePlaceholderFallback { get; set; }
+
+	[Parameter]
+	public RenderFragment? ActionsContent { get; set; }
+
+	[Parameter]
+	public RenderFragment? ChildContent { get; set; }
+
+	[Parameter]
+	public RenderFragment? StatusStripContent { get; set; }
+
+	[Parameter]
+	public EventCallback OnClick { get; set; }
+}
