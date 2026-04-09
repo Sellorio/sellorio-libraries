@@ -4,11 +4,11 @@
 	<AoDisableStateProvider @ref="disableStateProvider">
 		@if (OnValidSubmit.HasDelegate)
 		{
-			<MudForm @ref="form" Disabled="Disabled" SuppressImplicitSubmission="false" @onsubmit="OnSubmitAsync" ChildContent="ChildContent" Style="@($"max-width:{Constants.MaxFormWidth}")" />
+			<MudForm @ref="form" Disabled="Disabled" SuppressImplicitSubmission="false" @onsubmit="OnSubmitAsync" ChildContent="ChildContent" Style="max-width: var(--ao-form-max-width)" />
 		}
 		else
 		{
-			<MudForm @ref="form" Disabled="Disabled" SuppressImplicitSubmission="false" ChildContent="ChildContent" Style="@($"max-width:{Constants.MaxFormWidth}")" />
+			<MudForm @ref="form" Disabled="Disabled" SuppressImplicitSubmission="false" ChildContent="ChildContent" Style="max-width: var(--ao-form-max-width)" />
 		}
 	</AoDisableStateProvider>
 </CascadingValue>

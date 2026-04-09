@@ -1,4 +1,4 @@
-﻿<div class="ao-panel">
+﻿<div class="ao-panel ao-panel-@Mode.ToString().ToLower()">
 	<MudCard Square="Constants.Square">
 		@if (Title != null)
 		{
@@ -16,6 +16,9 @@
 @code {
 	[Parameter]
 	public string? Title { get; set; }
+
+	[Parameter]
+	public PanelMode Mode { get; set; }
 
 	[Parameter]
 	public RenderFragment? ChildContent { get; set; }

@@ -1,3 +1,8 @@
 ﻿.ao-panel + .ao-panel {
     margin-top: 16px;
 }
+
+.ao-panel-form {
+    width: 100%;
+    max-width: var(--ao-form-max-width, unset);
+}
