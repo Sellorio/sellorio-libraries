@@ -6,7 +6,7 @@ using Microsoft.Extensions.DependencyInjection;
 
 namespace Sellorio.Clients.Rest;
 
-internal static class ServiceCollectionExtensions
+public static class ServiceCollectionExtensions
 {
     public static IHttpClientBuilder? TryAddRestClient<TInterface, TImplementation>(this IServiceCollection services, Action<HttpClient>? configureClient = null, JsonSerializerOptions? jsonSerializerOptions = null)
         where TImplementation : TInterface
@@ -58,9 +58,15 @@ internal static class ServiceCollectionExtensions
                 constructor.GetParameters()
                     .Select(x =>
                     {
-                        if (x.ParameterType == typeof(IRestClient)) return restClient;
-                        if (x.ParameterType == typeof(JsonSerializerOptions)) return jsonOptions ?? Constants.DefaultJsonOptions;
-                        return svc.GetRequiredService(x.ParameterType);
+                        if (x.ParameterType == typeof(IRestClient))
+                        {
+                            return restClient;
+                        }
+
+                        return
+                            x.ParameterType == typeof(JsonSerializerOptions)
+                                ? jsonOptions ?? Constants.DefaultJsonOptions
+                                : svc.GetRequiredService(x.ParameterType);
                     })
                     .ToArray();
 

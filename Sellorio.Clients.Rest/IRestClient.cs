@@ -5,7 +5,7 @@ using System.Threading.Tasks;
 
 namespace Sellorio.Clients.Rest;
 
-internal interface IRestClient
+public interface IRestClient
 {
     Task<HttpResponseMessage> Delete(FormattableString url);
     Task<HttpResponseMessage> Get(FormattableString url);
