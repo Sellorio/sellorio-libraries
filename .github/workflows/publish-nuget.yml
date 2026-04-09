@@ -51,6 +51,12 @@ jobs:
 
           "packageVersion=$version" | Out-File -FilePath $env:GITHUB_OUTPUT -Append
 
+      - name: Build solution in Debug
+        run: dotnet build Sellorio.slnx --configuration Debug
+
+      - name: Test solution in Debug
+        run: dotnet test Sellorio.slnx --configuration Debug --no-build
+
       - name: Pack and publish in dependency order
         shell: pwsh
         run: |
