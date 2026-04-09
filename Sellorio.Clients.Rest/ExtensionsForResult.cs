@@ -11,25 +11,25 @@ public static class ExtensionsForResult
 {
     public static Task<Result> ToResult(this Task<HttpResponseMessage> responseMessageTask)
     {
-        return ToResult<Result>(responseMessageTask, error => ResultMessage.Error(error));
+        return ToResultAsync<Result>(responseMessageTask, error => ResultMessage.Error(error));
     }
 
     public static Task<Result<TContext>> ToResult<TContext>(this Task<HttpResponseMessage> responseMessageTask)
     {
-        return ToResult<Result<TContext>>(responseMessageTask, error => ResultMessage.Error(error));
+        return ToResultAsync<Result<TContext>>(responseMessageTask, error => ResultMessage.Error(error));
     }
 
     public static Task<ValueResult<TValue>> ToValueResult<TValue>(this Task<HttpResponseMessage> responseMessageTask)
     {
-        return ToResult<ValueResult<TValue>>(responseMessageTask, error => ResultMessage.Error(error));
+        return ToResultAsync<ValueResult<TValue>>(responseMessageTask, error => ResultMessage.Error(error));
     }
 
     public static Task<ValueResult<TContext, TValue>> ToValueResult<TContext, TValue>(this Task<HttpResponseMessage> responseMessageTask)
     {
-        return ToResult<ValueResult<TContext, TValue>>(responseMessageTask, error => ResultMessage.Error(error));
+        return ToResultAsync<ValueResult<TContext, TValue>>(responseMessageTask, error => ResultMessage.Error(error));
     }
 
-    private static async Task<TResult> ToResult<TResult>(
+    private static async Task<TResult> ToResultAsync<TResult>(
         Task<HttpResponseMessage> responseMessageTask,
         Func<string, TResult> errorToResult,
         JsonSerializerOptions? jsonSerializerOptions = null)
@@ -64,6 +64,6 @@ public static class ExtensionsForResult
             case System.Net.HttpStatusCode.InternalServerError:
             default:
                 return errorToResult.Invoke("An internal error has occured.");
-            }
+        }
     }
 }
