@@ -5,7 +5,6 @@ using Sellorio.Analyzers.CodeAnalysis.Extensions;
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp;
 using Microsoft.CodeAnalysis.Diagnostics;
-using Sellorio.Analyzers.CodeAnalysis;
 
 namespace Sellorio.Analyzers.CodeAnalysis.Style
 {

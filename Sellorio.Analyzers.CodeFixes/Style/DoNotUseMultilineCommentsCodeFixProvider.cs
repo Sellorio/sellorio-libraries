@@ -6,7 +6,6 @@ using System.Linq.Expressions;
 using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.CodeAnalysis;
-using Microsoft.CodeAnalysis.CodeActions;
 using Microsoft.CodeAnalysis.CodeFixes;
 using Microsoft.CodeAnalysis.CSharp;
 using Microsoft.CodeAnalysis.Text;
@@ -25,13 +24,19 @@ namespace Sellorio.Analyzers.CodeFixes.Style
         {
             var root = await context.Document.GetSyntaxRootAsync(context.CancellationToken).ConfigureAwait(false);
             var text = await context.Document.GetTextAsync(context.CancellationToken).ConfigureAwait(false);
+
             if (root == null)
+            {
                 return;
+            }
 
             var diagnostic = context.Diagnostics[0];
             var commentTrivia = FindCommentTrivia(root, diagnostic.Location.SourceSpan);
+
             if (!TryCreateReplacement(text, commentTrivia, out _))
+            {
                 return;
+            }
 
             context.RegisterCodeFix(
                 CreateDocumentCodeAction(
@@ -49,27 +54,37 @@ namespace Sellorio.Analyzers.CodeFixes.Style
         {
             var root = await document.GetSyntaxRootAsync(cancellationToken).ConfigureAwait(false);
             var text = await document.GetTextAsync(cancellationToken).ConfigureAwait(false);
+
             if (root == null)
+            {
                 return document;
+            }
 
             var commentTrivia = FindCommentTrivia(root, diagnosticSpan);
-            if (!TryCreateReplacement(text, commentTrivia, out var replacement))
-                return document;
 
-            return document.WithText(text.WithChanges(new TextChange(commentTrivia.Span, replacement)));
+            return
+                !TryCreateReplacement(text, commentTrivia, out var replacement)
+                    ? document
+                    : document.WithText(text.WithChanges(new TextChange(commentTrivia.Span, replacement)));
         }
 
         private static bool TryCreateReplacement(SourceText text, SyntaxTrivia commentTrivia, out string replacement)
         {
             replacement = string.Empty;
+
             if (commentTrivia == default || !commentTrivia.IsKind(SyntaxKind.MultiLineCommentTrivia))
+            {
                 return false;
+            }
 
             var startLine = text.Lines.GetLineFromPosition(commentTrivia.Span.Start);
             var endLine = text.Lines.GetLineFromPosition(Math.Max(commentTrivia.Span.Start, commentTrivia.Span.End - 1));
             var hasTrailingText = HasTrailingText(text, commentTrivia.Span.End, endLine.Span.End);
+
             if (startLine.LineNumber == endLine.LineNumber && hasTrailingText)
+            {
                 return false;
+            }
 
             if (startLine.LineNumber == endLine.LineNumber)
             {
@@ -100,7 +115,9 @@ namespace Sellorio.Analyzers.CodeFixes.Style
             }
 
             if (lines.Count == 0)
+            {
                 return false;
+            }
 
             lines[0] = lines[0].TrimStart(' ', '\t');
             replacement = string.Join(lineBreak, lines);
@@ -112,7 +129,9 @@ namespace Sellorio.Analyzers.CodeFixes.Style
             for (var position = commentEnd; position < lineEnd; position++)
             {
                 if (!char.IsWhiteSpace(text[position]))
+                {
                     return true;
+                }
             }
 
             return false;
@@ -124,8 +143,11 @@ namespace Sellorio.Analyzers.CodeFixes.Style
         private static void AddSingleLineComment(ICollection<string> lines, string commentBody, bool preserveIndentation)
         {
             var formattedComment = FormatSingleLineComment(commentBody, preserveIndentation, skipEmpty: true);
+
             if (formattedComment == null)
+            {
                 return;
+            }
 
             lines.Add(formattedComment);
         }
@@ -133,18 +155,21 @@ namespace Sellorio.Analyzers.CodeFixes.Style
         private static string FormatSingleLineComment(string commentBody, bool preserveIndentation, bool skipEmpty)
         {
             var (indentation, trimmedCommentBody) = NormalizeCommentBody(commentBody, preserveIndentation);
-            if (string.IsNullOrEmpty(trimmedCommentBody))
-                return skipEmpty ? null : indentation + "//";
 
-            return indentation + "// " + trimmedCommentBody;
+            return
+                string.IsNullOrEmpty(trimmedCommentBody)
+                    ? skipEmpty ? null
+                    : indentation + "//" : indentation + "// " + trimmedCommentBody;
         }
 
         private static string FormatRemainingMultilineComment(string commentBody)
         {
             var (indentation, trimmedCommentBody) = NormalizeCommentBody(commentBody, preserveIndentation: true);
-            return string.IsNullOrEmpty(trimmedCommentBody)
-                ? string.Empty
-                : indentation + "/* " + trimmedCommentBody + " */";
+
+            return
+                string.IsNullOrEmpty(trimmedCommentBody)
+                    ? string.Empty
+                    : indentation + "/* " + trimmedCommentBody + " */";
         }
 
         private static (string Indentation, string CommentBody) NormalizeCommentBody(string commentBody, bool preserveIndentation)
@@ -160,6 +185,7 @@ namespace Sellorio.Analyzers.CodeFixes.Style
 
             var indentation = commentBody.Substring(0, indentationLength);
             var normalizedCommentBody = commentBody.Substring(indentationLength);
+
             if (preserveIndentation && normalizedCommentBody.StartsWith("*", StringComparison.Ordinal))
             {
                 normalizedCommentBody = normalizedCommentBody.Substring(1);

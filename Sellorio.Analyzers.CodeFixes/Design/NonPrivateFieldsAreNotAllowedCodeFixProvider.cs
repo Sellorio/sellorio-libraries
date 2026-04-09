@@ -5,7 +5,6 @@ using System.Linq.Expressions;
 using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.CodeAnalysis;
-using Microsoft.CodeAnalysis.CodeActions;
 using Microsoft.CodeAnalysis.CodeFixes;
 using Microsoft.CodeAnalysis.CSharp;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
@@ -38,7 +37,9 @@ namespace Sellorio.Analyzers.CodeFixes.Design
             var fieldDeclaration = variableDeclarator?.Parent?.Parent as FieldDeclarationSyntax;
 
             if (fieldDeclaration == null || fieldDeclaration.Modifiers.Any(SyntaxKind.ConstKeyword))
+            {
                 return;
+            }
 
             context.RegisterCodeFix(
                 CreateDocumentCodeAction(
@@ -64,7 +65,9 @@ namespace Sellorio.Analyzers.CodeFixes.Design
             var fieldDeclaration = variableDeclarator?.Parent?.Parent as FieldDeclarationSyntax;
 
             if (fieldDeclaration == null)
+            {
                 return document;
+            }
 
             var propertyAnnotation = new SyntaxAnnotation();
             var propertyDeclaration = CreatePropertyDeclaration(fieldDeclaration, variableDeclarator)
@@ -92,17 +95,23 @@ namespace Sellorio.Analyzers.CodeFixes.Design
             var changedPropertyDeclaration = changedRoot.GetAnnotatedNodes(propertyAnnotation).OfType<PropertyDeclarationSyntax>().FirstOrDefault();
 
             if (changedPropertyDeclaration == null)
+            {
                 return changedDocument;
+            }
 
             var semanticModel = await changedDocument.GetSemanticModelAsync(cancellationToken).ConfigureAwait(false);
             var propertySymbol = semanticModel.GetDeclaredSymbol(changedPropertyDeclaration, cancellationToken);
 
             if (propertySymbol == null)
+            {
                 return changedDocument;
+            }
 
             var pascalCaseName = ToPascalCase(variableDeclarator.Identifier.ValueText);
             if (propertySymbol.Name == pascalCaseName)
+            {
                 return changedDocument;
+            }
 
             var renamedSolution = await Renamer.RenameSymbolAsync(
                 changedDocument.Project.Solution,
@@ -204,7 +213,9 @@ namespace Sellorio.Analyzers.CodeFixes.Design
                 .ToArray();
 
             if (parts.Length == 0)
+            {
                 return fieldName;
+            }
 
             return string.Concat(parts.Select(Capitalize));
         }
@@ -212,10 +223,14 @@ namespace Sellorio.Analyzers.CodeFixes.Design
         private static string Capitalize(string value)
         {
             if (value.Length == 0)
+            {
                 return value;
+            }
 
             if (value.Length == 1)
+            {
                 return value.ToUpperInvariant();
+            }
 
             return char.ToUpperInvariant(value[0]) + value.Substring(1);
         }

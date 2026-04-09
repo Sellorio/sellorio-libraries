@@ -5,7 +5,6 @@ using System.Linq.Expressions;
 using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.CodeAnalysis;
-using Microsoft.CodeAnalysis.CodeActions;
 using Microsoft.CodeAnalysis.CodeFixes;
 using Microsoft.CodeAnalysis.CSharp;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
@@ -29,7 +28,9 @@ namespace Sellorio.Analyzers.CodeFixes.Design
             var propertyDeclaration = FindPropertyDeclaration(root, diagnostic.Location.SourceSpan);
 
             if (!CanConvertToField(propertyDeclaration))
+            {
                 return;
+            }
 
             context.RegisterCodeFix(
                 CreateDocumentCodeAction(
@@ -72,7 +73,9 @@ namespace Sellorio.Analyzers.CodeFixes.Design
             var propertyDeclaration = FindPropertyDeclaration(root, declarationSpan);
 
             if (!CanConvertToField(propertyDeclaration))
+            {
                 return document;
+            }
 
             var fieldDeclaration = CreateFieldDeclaration(propertyDeclaration)
                 .WithAdditionalAnnotations(Formatter.Annotation);
@@ -115,7 +118,9 @@ namespace Sellorio.Analyzers.CodeFixes.Design
         private static bool ShouldBeReadOnly(PropertyDeclarationSyntax propertyDeclaration)
         {
             if (propertyDeclaration.ExpressionBody != null)
+            {
                 return true;
+            }
 
             return propertyDeclaration.AccessorList != null
                 && propertyDeclaration.AccessorList.Accessors.All(

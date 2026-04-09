@@ -4,7 +4,6 @@ using System.Linq.Expressions;
 using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.CodeAnalysis;
-using Microsoft.CodeAnalysis.CodeActions;
 using Microsoft.CodeAnalysis.CodeFixes;
 using Microsoft.CodeAnalysis.CSharp;
 using Microsoft.CodeAnalysis.Text;
@@ -23,6 +22,7 @@ namespace Sellorio.Analyzers.CodeFixes.Style
         {
             var root = await context.Document.GetSyntaxRootAsync(context.CancellationToken).ConfigureAwait(false);
             var text = await context.Document.GetTextAsync(context.CancellationToken).ConfigureAwait(false);
+
             if (root == null)
             {
                 return;
@@ -30,6 +30,7 @@ namespace Sellorio.Analyzers.CodeFixes.Style
 
             var diagnostic = context.Diagnostics[0];
             var openBraceToken = FindOpenBraceToken(root, diagnostic.Location.SourceSpan);
+
             if (!TryCreateTextChange(text, openBraceToken, out _))
             {
                 return;

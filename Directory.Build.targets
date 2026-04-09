@@ -1,6 +1,7 @@
 <Project>
   <PropertyGroup>
     <GenerateDocumentationFile>True</GenerateDocumentationFile>
+	<TreatWarningsAsErrors>true</TreatWarningsAsErrors>
   </PropertyGroup>
 	
   <PropertyGroup Condition="'$(Configuration)' == 'Release' and '$(DisableProjectReferencePackageConversion)' != 'true'">

@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="utf-8"?>
+<package>
+  <metadata>
+    <id>Sellorio.Analyzers</id>
+    <version>0.0.0</version>
+    <authors>Sellorio.Analyzers</authors>
+    <description>Package Description</description>
+    <dependencies>
+      <group targetFramework=".NETStandard2.0">
+        <dependency id="Roslynator.Analyzers" version="4.15.0" />
+        <dependency id="Sellorio.Analyzers.CodeAnalysis" version="0.0.0" include="All" />
+        <dependency id="Sellorio.Analyzers.CodeFixes" version="0.0.0" include="All" />
+      </group>
+    </dependencies>
+  </metadata>
+</package>

@@ -1,14 +1,13 @@
 ﻿using Microsoft.CodeAnalysis.CodeRefactorings;
 using Microsoft.CodeAnalysis.CSharp.Testing;
 using Microsoft.CodeAnalysis.Testing;
-using Sellorio.Analyzers.Tests.Verifiers;
 
 namespace Sellorio.Analyzers.Tests.Verifiers;
 
 public static partial class CSharpCodeRefactoringVerifier<TCodeRefactoring>
     where TCodeRefactoring : CodeRefactoringProvider, new()
 {
-    public class Test : CSharpCodeRefactoringTest<TCodeRefactoring, DefaultVerifier>
+    internal class Test : CSharpCodeRefactoringTest<TCodeRefactoring, DefaultVerifier>
     {
         public Test()
         {

@@ -35,13 +35,13 @@ namespace Sellorio.Analyzers.CodeAnalysis.Naming
             }
 
             // Check each argument
-            for (int i = 0; i < invocation.ArgumentList.Arguments.Count; i++)
+            for (var i = 0; i < invocation.ArgumentList.Arguments.Count; i++)
             {
                 var argument = invocation.ArgumentList.Arguments[i];
-                
+
                 // Get the parameter this argument corresponds to
                 IParameterSymbol parameterSymbol = null;
-                
+
                 if (argument.NameColon != null)
                 {
                     // Named argument
@@ -96,7 +96,7 @@ namespace Sellorio.Analyzers.CodeAnalysis.Naming
 
                 // Check if the argument is a lambda expression
                 LambdaExpressionSyntax lambda = null;
-                
+
                 if (argument.Expression is ParenthesizedLambdaExpressionSyntax parenthesizedLambda)
                 {
                     lambda = parenthesizedLambda;

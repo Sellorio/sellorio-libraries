@@ -24,12 +24,16 @@ namespace Sellorio.Analyzers.CodeAnalysis.Style
             foreach (var token in root.DescendantTokens())
             {
                 if (!token.IsKind(SyntaxKind.CloseParenToken))
+                {
                     continue;
+                }
 
                 var prevToken = token.GetPreviousToken();
 
                 if (prevToken.IsKind(SyntaxKind.None))
+                {
                     continue;
+                }
 
                 var closeParenLine = text.Lines.GetLineFromPosition(token.SpanStart).LineNumber;
                 var prevTokenLine = text.Lines.GetLineFromPosition(prevToken.Span.End).LineNumber;

@@ -5,14 +5,12 @@ using System.Linq.Expressions;
 using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.CodeAnalysis;
-using Microsoft.CodeAnalysis.CodeActions;
 using Microsoft.CodeAnalysis.CodeFixes;
 using Microsoft.CodeAnalysis.CSharp;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
 using Microsoft.CodeAnalysis.Formatting;
 using Sellorio.Analyzers.CodeAnalysis;
 using Microsoft.CodeAnalysis.Text;
-using Sellorio.Analyzers.CodeFixes;
 
 namespace Sellorio.Analyzers.CodeFixes.Usage
 {
@@ -27,13 +25,19 @@ namespace Sellorio.Analyzers.CodeFixes.Usage
         {
             var root = await context.Document.GetSyntaxRootAsync(context.CancellationToken).ConfigureAwait(false);
             var semanticModel = await context.Document.GetSemanticModelAsync(context.CancellationToken).ConfigureAwait(false);
+
             if (root == null || semanticModel == null)
+            {
                 return;
+            }
 
             var diagnostic = context.Diagnostics[0];
             var awaitExpression = FindAwaitExpression(root, diagnostic.Location.SourceSpan);
+
             if (!CanSimplify(awaitExpression, semanticModel, context.CancellationToken))
+            {
                 return;
+            }
 
             context.RegisterCodeFix(
                 CreateDocumentCodeAction(
@@ -56,19 +60,27 @@ namespace Sellorio.Analyzers.CodeFixes.Usage
         {
             var root = await document.GetSyntaxRootAsync(cancellationToken).ConfigureAwait(false);
             var semanticModel = await document.GetSemanticModelAsync(cancellationToken).ConfigureAwait(false);
+
             if (root == null || semanticModel == null)
+            {
                 return document;
+            }
 
             var awaitExpression = FindAwaitExpression(root, diagnosticSpan);
+
             if (awaitExpression == null)
+            {
                 return document;
+            }
 
             if (TryGetFromResultReplacement(awaitExpression, semanticModel, cancellationToken, out var replacementExpression))
             {
                 if (awaitExpression.Parent is ExpressionStatementSyntax expressionStatement)
                 {
                     if (!IsValidStatementExpression(replacementExpression))
+                    {
                         return document;
+                    }
 
                     var updatedStatement = SyntaxFactory.ExpressionStatement(replacementExpression.WithoutTrivia())
                         .WithLeadingTrivia(expressionStatement.GetLeadingTrivia())
@@ -83,7 +95,9 @@ namespace Sellorio.Analyzers.CodeFixes.Usage
             }
 
             if (!IsCompletedTask(awaitExpression, semanticModel, cancellationToken))
+            {
                 return document;
+            }
 
             switch (awaitExpression.Parent)
             {
@@ -108,13 +122,15 @@ namespace Sellorio.Analyzers.CodeFixes.Usage
         private static bool CanSimplify(AwaitExpressionSyntax awaitExpression, SemanticModel semanticModel, CancellationToken cancellationToken)
         {
             if (awaitExpression == null)
+            {
                 return false;
+            }
 
-            if (TryGetFromResultReplacement(awaitExpression, semanticModel, cancellationToken, out var replacementExpression))
-                return !(awaitExpression.Parent is ExpressionStatementSyntax) || IsValidStatementExpression(replacementExpression);
-
-            return IsCompletedTask(awaitExpression, semanticModel, cancellationToken)
-                && (awaitExpression.Parent is ExpressionStatementSyntax || awaitExpression.Parent is ReturnStatementSyntax);
+            return
+                TryGetFromResultReplacement(awaitExpression, semanticModel, cancellationToken, out var replacementExpression)
+                    ? !(awaitExpression.Parent is ExpressionStatementSyntax) || IsValidStatementExpression(replacementExpression)
+                    : IsCompletedTask(awaitExpression, semanticModel, cancellationToken) &&
+                        (awaitExpression.Parent is ExpressionStatementSyntax || awaitExpression.Parent is ReturnStatementSyntax);
         }
 
         private static bool TryGetFromResultReplacement(
@@ -127,17 +143,24 @@ namespace Sellorio.Analyzers.CodeFixes.Usage
 
             var awaitedExpression = Unwrap(awaitExpression.Expression);
             var invocationExpression = awaitedExpression as InvocationExpressionSyntax;
+
             if (invocationExpression == null || invocationExpression.ArgumentList.Arguments.Count != 1)
+            {
                 return false;
+            }
 
             var symbolInfo = semanticModel.GetSymbolInfo(invocationExpression, cancellationToken);
             var methodSymbol = symbolInfo.Symbol as IMethodSymbol;
+
             if (methodSymbol == null)
+            {
                 return false;
+            }
 
             var containingType = methodSymbol.ContainingType?.ToDisplayString();
-            if (methodSymbol.Name != "FromResult"
-                || (containingType != "System.Threading.Tasks.Task" && containingType != "System.Threading.Tasks.ValueTask"))
+
+            if (methodSymbol.Name != "FromResult" ||
+                containingType != "System.Threading.Tasks.Task" && containingType != "System.Threading.Tasks.ValueTask")
             {
                 return false;
             }
@@ -150,13 +173,19 @@ namespace Sellorio.Analyzers.CodeFixes.Usage
         {
             var awaitedExpression = Unwrap(awaitExpression.Expression);
             var memberAccessExpression = awaitedExpression as MemberAccessExpressionSyntax;
+
             if (memberAccessExpression == null)
+            {
                 return false;
+            }
 
             var symbolInfo = semanticModel.GetSymbolInfo(memberAccessExpression, cancellationToken);
             var propertySymbol = symbolInfo.Symbol as IPropertySymbol;
+
             if (propertySymbol == null)
+            {
                 return false;
+            }
 
             var containingType = propertySymbol.ContainingType?.ToDisplayString();
             return propertySymbol.Name == "CompletedTask"

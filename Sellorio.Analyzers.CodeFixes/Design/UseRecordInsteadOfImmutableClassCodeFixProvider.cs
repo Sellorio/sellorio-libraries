@@ -6,7 +6,6 @@ using System.Linq.Expressions;
 using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.CodeAnalysis;
-using Microsoft.CodeAnalysis.CodeActions;
 using Microsoft.CodeAnalysis.CodeFixes;
 using Microsoft.CodeAnalysis.CSharp;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
@@ -18,7 +17,7 @@ namespace Sellorio.Analyzers.CodeFixes.Design
     [ExportCodeFixProvider(LanguageNames.CSharp, Name = nameof(UseRecordInsteadOfImmutableClassCodeFixProvider)), Shared]
     public class UseRecordInsteadOfImmutableClassCodeFixProvider : CodeFixProviderBase
     {
-        private const string _title = "Convert to record";
+        private const string Title = "Convert to record";
 
         internal override Expression<Func<DiagnosticDescriptorValues>> Descriptor => () => Descriptors.SE0011;
 
@@ -29,13 +28,15 @@ namespace Sellorio.Analyzers.CodeFixes.Design
             var classDeclaration = FindClassDeclaration(root, diagnostic.Location.SourceSpan);
 
             if (classDeclaration == null || !SupportsRecords(context.Document.Project.ParseOptions as CSharpParseOptions))
+            {
                 return;
+            }
 
             context.RegisterCodeFix(
                 CreateDocumentCodeAction(
-                    title: _title,
+                    title: Title,
                     createChangedDocument: ct => ConvertToRecordAsync(context.Document, diagnostic.Location.SourceSpan, ct),
-                    equivalenceKey: _title),
+                    equivalenceKey: Title),
                 diagnostic);
         }
 
@@ -55,11 +56,16 @@ namespace Sellorio.Analyzers.CodeFixes.Design
             var semanticModel = await document.GetSemanticModelAsync(cancellationToken).ConfigureAwait(false);
 
             if (classDeclaration == null || semanticModel == null)
+            {
                 return document;
+            }
 
             var recordDeclaration = CreateRecordDeclaration(classDeclaration, semanticModel, document.Project.ParseOptions as CSharpParseOptions);
+
             if (recordDeclaration == null)
+            {
                 return document;
+            }
 
             var newRoot = root.ReplaceNode(classDeclaration, recordDeclaration);
 
@@ -81,12 +87,18 @@ namespace Sellorio.Analyzers.CodeFixes.Design
             CSharpParseOptions parseOptions)
         {
             var properties = classDeclaration.Members.OfType<PropertyDeclarationSyntax>().ToList();
+
             if (!CanConvertPropertiesToPrimaryConstructorParameters(properties))
+            {
                 return null;
+            }
 
             var canonicalConstructor = FindCanonicalConstructor(classDeclaration, semanticModel, properties);
+
             if (canonicalConstructor == null)
+            {
                 return null;
+            }
 
             var attributeText = classDeclaration.AttributeLists.Count == 0
                 ? string.Empty
@@ -203,23 +215,25 @@ namespace Sellorio.Analyzers.CodeFixes.Design
             out IPropertySymbol propertySymbol)
         {
             propertySymbol = semanticModel.GetSymbolInfo(assignmentExpression.Left).Symbol as IPropertySymbol;
-            if (propertySymbol == null)
-                return false;
 
-            return assignmentExpression.Right is IdentifierNameSyntax identifier
-                && semanticModel.GetSymbolInfo(identifier).Symbol is IParameterSymbol;
+            return
+                propertySymbol != null &&
+                assignmentExpression.Right is IdentifierNameSyntax identifier &&
+                semanticModel.GetSymbolInfo(identifier).Symbol is IParameterSymbol;
         }
 
         private static bool CanConvertPropertiesToPrimaryConstructorParameters(List<PropertyDeclarationSyntax> properties)
         {
-            return properties.Count > 0
-                && properties.All(property => property.Modifiers.Count == 0
-                    || property.Modifiers.Count == 1 && property.Modifiers[0].IsKind(SyntaxKind.PublicKeyword));
+            return
+                properties.Count > 0 &&
+                    properties.All(property => property.Modifiers.Count == 0 ||
+                property.Modifiers.Count == 1 && property.Modifiers[0].IsKind(SyntaxKind.PublicKeyword));
         }
 
         private static string CreatePrimaryConstructorParameterText(PropertyDeclarationSyntax property)
         {
             var attributeText = string.Join(" ", property.AttributeLists.Select(CreatePrimaryConstructorAttributeText));
+
             if (attributeText.Length > 0)
             {
                 attributeText += " ";
@@ -231,6 +245,7 @@ namespace Sellorio.Analyzers.CodeFixes.Design
         private static string CreatePrimaryConstructorAttributeText(AttributeListSyntax attributeList)
         {
             var propertyTarget = attributeList.Target;
+
             if (propertyTarget == null || !propertyTarget.Identifier.IsKind(SyntaxKind.PropertyKeyword))
             {
                 propertyTarget = SyntaxFactory.AttributeTargetSpecifier(
@@ -262,15 +277,18 @@ namespace Sellorio.Analyzers.CodeFixes.Design
             var recordDeclarationText = declarationText.Remove(relativeKeywordStart, classDeclaration.Keyword.Span.Length)
                 .Insert(relativeKeywordStart, SyntaxFacts.GetText(SyntaxKind.RecordKeyword));
 
-            return (SyntaxFactory.ParseMemberDeclaration(recordDeclarationText, 0, parseOptions, consumeFullText: true) as RecordDeclarationSyntax)
-                ?.WithLeadingTrivia(classDeclaration.GetLeadingTrivia())
-                .WithTrailingTrivia(classDeclaration.GetTrailingTrivia());
+            return
+                (SyntaxFactory.ParseMemberDeclaration(recordDeclarationText, 0, parseOptions, consumeFullText: true) as RecordDeclarationSyntax)
+                    ?.WithLeadingTrivia(classDeclaration.GetLeadingTrivia())
+                    .WithTrailingTrivia(classDeclaration.GetTrailingTrivia());
         }
 
         private static bool SupportsRecords(CSharpParseOptions parseOptions)
         {
             if (parseOptions == null)
+            {
                 return true;
+            }
 
             var languageVersion = parseOptions.LanguageVersion;
 

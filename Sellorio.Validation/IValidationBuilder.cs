@@ -30,10 +30,10 @@ public interface IValidationBuilder<TObject>
         Expression<Func<TObject, IEnumerable<TNewObject>>> path,
         Func<IValidationBuilder<TNewObject>, Task> validate);
 
-    Task UseValidator<TValidator>()
+    Task UseValidator<TValidator>(bool optional = false)
         where TValidator : IValidatorWithoutContext<TObject>;
 
-    Task UseValidator<TValidator, TContext>(TContext context)
+    Task UseValidator<TValidator, TContext>(TContext context, bool optional = false)
         where TValidator : IValidatorWithContext<TObject, TContext>;
 
     IValidationBuilder<TObject> AddMessage(

@@ -6,7 +6,6 @@ using System.Linq.Expressions;
 using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.CodeAnalysis;
-using Microsoft.CodeAnalysis.CodeActions;
 using Microsoft.CodeAnalysis.CodeFixes;
 using Microsoft.CodeAnalysis.CSharp;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
@@ -21,7 +20,7 @@ namespace Sellorio.Analyzers.CodeFixes.Performance
     {
         private const string Title = "Use Parse";
 
-        private static readonly Dictionary<string, string> ConvertMethodToType = new Dictionary<string, string>
+        private static readonly Dictionary<string, string> _convertMethodToType = new Dictionary<string, string>
         {
             { "ToBoolean", "bool" },
             { "ToByte", "byte" },
@@ -44,13 +43,19 @@ namespace Sellorio.Analyzers.CodeFixes.Performance
         public override async Task RegisterCodeFixesAsync(CodeFixContext context)
         {
             var root = await context.Document.GetSyntaxRootAsync(context.CancellationToken).ConfigureAwait(false);
+
             if (root == null)
+            {
                 return;
+            }
 
             var diagnostic = context.Diagnostics[0];
             var invocation = FindInvocation(root, diagnostic.Location.SourceSpan);
+
             if (!TryCreateReplacement(invocation, out _, out _))
+            {
                 return;
+            }
 
             context.RegisterCodeFix(
                 CreateDocumentCodeAction(
@@ -75,12 +80,18 @@ namespace Sellorio.Analyzers.CodeFixes.Performance
             CancellationToken cancellationToken)
         {
             var root = await document.GetSyntaxRootAsync(cancellationToken).ConfigureAwait(false);
+
             if (root == null)
+            {
                 return document;
+            }
 
             var invocation = FindInvocation(root, diagnosticSpan);
+
             if (!TryCreateReplacement(invocation, out var replacement, out var typeName))
+            {
                 return document;
+            }
 
             var updatedInvocation = replacement
                 .WithLeadingTrivia(invocation.GetLeadingTrivia())
@@ -88,8 +99,11 @@ namespace Sellorio.Analyzers.CodeFixes.Performance
                 .WithAdditionalAnnotations(Formatter.Annotation);
 
             var updatedRoot = root.ReplaceNode(invocation, updatedInvocation);
-            if (typeName == "DateTime")
+
+            if (typeName == nameof(DateTime))
+            {
                 updatedRoot = AddSystemUsingIfMissing(updatedRoot);
+            }
 
             return document.WithSyntaxRoot(updatedRoot);
         }
@@ -101,16 +115,23 @@ namespace Sellorio.Analyzers.CodeFixes.Performance
         {
             replacement = null;
             typeName = null;
-            if (!(invocation?.Expression is MemberAccessExpressionSyntax memberAccess))
-                return false;
 
-            if (!ConvertMethodToType.TryGetValue(memberAccess.Name.Identifier.ValueText, out var replacementTypeName))
+            if (!(invocation?.Expression is MemberAccessExpressionSyntax memberAccess))
+            {
                 return false;
+            }
+
+            if (!_convertMethodToType.TryGetValue(memberAccess.Name.Identifier.ValueText, out var replacementTypeName))
+            {
+                return false;
+            }
 
             typeName = replacementTypeName;
 
             if (invocation.ArgumentList.Arguments.Count != 1)
+            {
                 return false;
+            }
 
             replacement = SyntaxFactory.InvocationExpression(
                 SyntaxFactory.ParseExpression(typeName + ".Parse"),
@@ -122,12 +143,14 @@ namespace Sellorio.Analyzers.CodeFixes.Performance
         private static SyntaxNode AddSystemUsingIfMissing(SyntaxNode root)
         {
             if (!(root is CompilationUnitSyntax compilationUnit))
+            {
                 return root;
+            }
 
-            if (compilationUnit.Usings.Any(u => u.Alias == null && u.Name?.ToString() == "System"))
-                return root;
-
-            return compilationUnit.AddUsings(SyntaxFactory.UsingDirective(SyntaxFactory.ParseName("System")));
+            return
+                compilationUnit.Usings.Any(u => u.Alias == null && u.Name?.ToString() == "System")
+                    ? root
+                    : compilationUnit.AddUsings(SyntaxFactory.UsingDirective(SyntaxFactory.ParseName("System")));
         }
     }
 }

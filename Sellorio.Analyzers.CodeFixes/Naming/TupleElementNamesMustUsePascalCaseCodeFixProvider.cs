@@ -5,7 +5,6 @@ using System.Linq.Expressions;
 using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.CodeAnalysis;
-using Microsoft.CodeAnalysis.CodeActions;
 using Microsoft.CodeAnalysis.CodeFixes;
 using Microsoft.CodeAnalysis.CSharp;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
@@ -25,12 +24,18 @@ namespace Sellorio.Analyzers.CodeFixes.Naming
         public override async Task RegisterCodeFixesAsync(CodeFixContext context)
         {
             var root = await context.Document.GetSyntaxRootAsync(context.CancellationToken).ConfigureAwait(false);
+
             if (root == null)
+            {
                 return;
+            }
 
             var diagnostic = context.Diagnostics[0];
+
             if (FindTupleExpressionName(root, diagnostic.Location.SourceSpan) == null && FindTupleTypeElement(root, diagnostic.Location.SourceSpan) == null)
+            {
                 return;
+            }
 
             context.RegisterCodeFix(
                 CreateDocumentCodeAction(
@@ -45,7 +50,7 @@ namespace Sellorio.Analyzers.CodeFixes.Naming
             var token = root.FindToken(span.Start);
             var nameColon = token.Parent?.AncestorsAndSelf().OfType<NameColonSyntax>().FirstOrDefault();
 
-            return nameColon?.Parent is ArgumentSyntax ? nameColon.Name as IdentifierNameSyntax : null;
+            return nameColon?.Parent is ArgumentSyntax ? nameColon.Name : null;
         }
 
         private static TupleElementSyntax FindTupleTypeElement(SyntaxNode root, TextSpan span)
@@ -60,10 +65,14 @@ namespace Sellorio.Analyzers.CodeFixes.Naming
             CancellationToken cancellationToken)
         {
             var root = await document.GetSyntaxRootAsync(cancellationToken).ConfigureAwait(false);
+
             if (root == null)
+            {
                 return document;
+            }
 
             var tupleExpressionName = FindTupleExpressionName(root, declarationSpan);
+
             if (tupleExpressionName != null)
             {
                 var explicitName = ToPascalCase(tupleExpressionName.Identifier.ValueText);
@@ -76,8 +85,11 @@ namespace Sellorio.Analyzers.CodeFixes.Naming
             }
 
             var tupleTypeElement = FindTupleTypeElement(root, declarationSpan);
+
             if (tupleTypeElement == null)
+            {
                 return document;
+            }
 
             var updatedElementName = ToPascalCase(tupleTypeElement.Identifier.ValueText);
             var updatedElement = tupleTypeElement
@@ -107,21 +119,20 @@ namespace Sellorio.Analyzers.CodeFixes.Naming
                 .Where(part => part.Length > 0)
                 .ToArray();
 
-            if (parts.Length == 0)
-                return name;
-
-            return string.Concat(parts.Select(Capitalize));
+            return parts.Length == 0 ? name : string.Concat(parts.Select(Capitalize));
         }
 
         private static string Capitalize(string value)
         {
             if (value.Length == 0)
+            {
                 return value;
+            }
 
-            if (value.Length == 1)
-                return value.ToUpperInvariant();
-
-            return char.ToUpperInvariant(value[0]) + value.Substring(1);
+            return
+                value.Length == 1
+                    ? value.ToUpperInvariant()
+                    : (char.ToUpperInvariant(value[0]) + value.Substring(1));
         }
     }
 }

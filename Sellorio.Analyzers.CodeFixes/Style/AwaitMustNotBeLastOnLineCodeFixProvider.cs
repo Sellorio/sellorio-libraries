@@ -6,7 +6,6 @@ using System.Linq.Expressions;
 using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.CodeAnalysis;
-using Microsoft.CodeAnalysis.CodeActions;
 using Microsoft.CodeAnalysis.CodeFixes;
 using Microsoft.CodeAnalysis.CSharp;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
@@ -27,12 +26,16 @@ namespace Sellorio.Analyzers.CodeFixes.Style
             var root = await context.Document.GetSyntaxRootAsync(context.CancellationToken).ConfigureAwait(false);
             var text = await context.Document.GetTextAsync(context.CancellationToken).ConfigureAwait(false);
             if (root == null)
+            {
                 return;
+            }
 
             var diagnostic = context.Diagnostics[0];
             var awaitExpression = FindAwaitExpression(root, diagnostic.Location.SourceSpan);
             if (!TryCreateTextChanges(awaitExpression, text, out _))
+            {
                 return;
+            }
 
             context.RegisterCodeFix(
                 CreateDocumentCodeAction(
@@ -56,11 +59,15 @@ namespace Sellorio.Analyzers.CodeFixes.Style
             var root = await document.GetSyntaxRootAsync(cancellationToken).ConfigureAwait(false);
             var text = await document.GetTextAsync(cancellationToken).ConfigureAwait(false);
             if (root == null)
+            {
                 return document;
+            }
 
             var awaitExpression = FindAwaitExpression(root, diagnosticSpan);
             if (!TryCreateTextChanges(awaitExpression, text, out var changes))
+            {
                 return document;
+            }
 
             return document.WithText(text.WithChanges(changes));
         }
@@ -72,15 +79,21 @@ namespace Sellorio.Analyzers.CodeFixes.Style
         {
             changes = null;
             if (awaitExpression == null)
+            {
                 return false;
+            }
 
             var firstToken = awaitExpression.Expression.GetFirstToken(includeZeroWidth: true);
             if (firstToken == default)
+            {
                 return false;
+            }
 
             var interTokenTrivia = awaitExpression.AwaitKeyword.TrailingTrivia.Concat(firstToken.LeadingTrivia).ToList();
             if (interTokenTrivia.Any(trivia => !IsSupportedTrivia(trivia)))
+            {
                 return false;
+            }
 
             var textChanges = new List<TextChange>
             {
@@ -128,7 +141,9 @@ namespace Sellorio.Analyzers.CodeFixes.Style
             var awaitIndent = GetLeadingWhitespace(awaitLineText);
             var expressionIndent = GetLeadingWhitespace(expressionLineText);
             if (expressionIndent.Length <= awaitIndent.Length)
+            {
                 return string.Empty;
+            }
 
             return expressionIndent.StartsWith(awaitIndent, StringComparison.Ordinal)
                 ? expressionIndent.Substring(awaitIndent.Length)
@@ -154,10 +169,14 @@ namespace Sellorio.Analyzers.CodeFixes.Style
         private static string RemoveIndentAdjustment(string lineText, string indentAdjustment)
         {
             if (string.IsNullOrEmpty(lineText) || string.IsNullOrEmpty(indentAdjustment))
+            {
                 return lineText;
+            }
 
             if (lineText.StartsWith(indentAdjustment, StringComparison.Ordinal))
+            {
                 return lineText.Substring(indentAdjustment.Length);
+            }
 
             var removableLength = Math.Min(indentAdjustment.Length, GetLeadingWhitespace(lineText).Length);
             if (removableLength == 0)

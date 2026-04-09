@@ -5,7 +5,6 @@ using System.Linq.Expressions;
 using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.CodeAnalysis;
-using Microsoft.CodeAnalysis.CodeActions;
 using Microsoft.CodeAnalysis.CodeFixes;
 using Microsoft.CodeAnalysis.CSharp;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
@@ -29,7 +28,9 @@ namespace Sellorio.Analyzers.CodeFixes.Design
             var memberDeclaration = FindMemberDeclaration(root, diagnostic.Location.SourceSpan);
 
             if (memberDeclaration == null)
+            {
                 return;
+            }
 
             context.RegisterCodeFix(
                 CreateDocumentCodeAction(
@@ -62,7 +63,9 @@ namespace Sellorio.Analyzers.CodeFixes.Design
             var declaration = FindMemberDeclaration(root, declarationSpan);
 
             if (declaration == null)
+            {
                 return document;
+            }
 
             var modifiers = declaration.Modifiers;
 
@@ -77,7 +80,9 @@ namespace Sellorio.Analyzers.CodeFixes.Design
             }
 
             if (index == -1)
+            {
                 return document;
+            }
 
             SyntaxTokenList newModifiers;
             if (index == 0 && modifiers.Count > 1)

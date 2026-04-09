@@ -6,7 +6,7 @@ namespace Sellorio.Blazor.Components.Base;
 
 public abstract class AoDisableComponent : ComponentBase, IDisposable
 {
-    private bool isDisposed;
+    private bool _isDisposed;
 
     protected bool DisableContent => DisableStateScope.IsDisabled || Disabled;
 
@@ -24,21 +24,21 @@ public abstract class AoDisableComponent : ComponentBase, IDisposable
         }
     }
 
-    private void DisabledChanged()
+    private void DisabledChanged(object? sender, EventArgs e)
     {
         _ = InvokeAsync(StateHasChanged);
     }
 
     protected virtual void Dispose(bool disposing)
     {
-        if (!isDisposed)
+        if (!_isDisposed)
         {
             if (disposing && DisableStateScope != null)
             {
                 DisableStateScope.IsDisabledChanged -= DisabledChanged;
             }
 
-            isDisposed = true;
+            _isDisposed = true;
         }
     }
 

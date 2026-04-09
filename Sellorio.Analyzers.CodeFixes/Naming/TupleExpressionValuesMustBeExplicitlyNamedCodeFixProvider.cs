@@ -5,14 +5,12 @@ using System.Linq.Expressions;
 using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.CodeAnalysis;
-using Microsoft.CodeAnalysis.CodeActions;
 using Microsoft.CodeAnalysis.CodeFixes;
 using Microsoft.CodeAnalysis.CSharp;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
 using Microsoft.CodeAnalysis.Formatting;
 using Microsoft.CodeAnalysis.Text;
 using Sellorio.Analyzers.CodeAnalysis;
-using Sellorio.Analyzers.CodeFixes;
 
 namespace Sellorio.Analyzers.CodeFixes.Naming
 {
@@ -26,17 +24,26 @@ namespace Sellorio.Analyzers.CodeFixes.Naming
         public override async Task RegisterCodeFixesAsync(CodeFixContext context)
         {
             var root = await context.Document.GetSyntaxRootAsync(context.CancellationToken).ConfigureAwait(false);
+
             if (root == null)
+            {
                 return;
+            }
 
             var diagnostic = context.Diagnostics[0];
             var argument = FindArgument(root, diagnostic.Location.SourceSpan);
+
             if (argument == null || argument.NameColon != null)
+            {
                 return;
+            }
 
             var semanticModel = await context.Document.GetSemanticModelAsync(context.CancellationToken).ConfigureAwait(false);
+
             if (!TryGetImplicitTupleElementName(argument.Expression, semanticModel, context.CancellationToken, out _))
+            {
                 return;
+            }
 
             context.RegisterCodeFix(
                 CreateDocumentCodeAction(
@@ -58,16 +65,25 @@ namespace Sellorio.Analyzers.CodeFixes.Naming
             CancellationToken cancellationToken)
         {
             var root = await document.GetSyntaxRootAsync(cancellationToken).ConfigureAwait(false);
+
             if (root == null)
+            {
                 return document;
+            }
 
             var argument = FindArgument(root, declarationSpan);
+
             if (argument == null || argument.NameColon != null)
+            {
                 return document;
+            }
 
             var semanticModel = await document.GetSemanticModelAsync(cancellationToken).ConfigureAwait(false);
+
             if (!TryGetImplicitTupleElementName(argument.Expression, semanticModel, cancellationToken, out var tupleElementName))
+            {
                 return document;
+            }
 
             var explicitName = ToPascalCase(tupleElementName);
             var updatedArgument = argument
@@ -157,21 +173,20 @@ namespace Sellorio.Analyzers.CodeFixes.Naming
                 .Where(part => part.Length > 0)
                 .ToArray();
 
-            if (parts.Length == 0)
-                return name;
-
-            return string.Concat(parts.Select(Capitalize));
+            return parts.Length == 0 ? name : string.Concat(parts.Select(Capitalize));
         }
 
         private static string Capitalize(string value)
         {
             if (value.Length == 0)
+            {
                 return value;
+            }
 
-            if (value.Length == 1)
-                return value.ToUpperInvariant();
-
-            return char.ToUpperInvariant(value[0]) + value.Substring(1);
+            return
+                value.Length == 1
+                    ? value.ToUpperInvariant()
+                    : (char.ToUpperInvariant(value[0]) + value.Substring(1));
         }
     }
 }

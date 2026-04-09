@@ -5,14 +5,12 @@ using System.Linq.Expressions;
 using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.CodeAnalysis;
-using Microsoft.CodeAnalysis.CodeActions;
 using Microsoft.CodeAnalysis.CodeFixes;
 using Microsoft.CodeAnalysis.CSharp;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
 using Microsoft.CodeAnalysis.Formatting;
-using Sellorio.Analyzers.CodeAnalysis;
 using Microsoft.CodeAnalysis.Text;
-using Sellorio.Analyzers.CodeFixes;
+using Sellorio.Analyzers.CodeAnalysis;
 
 namespace Sellorio.Analyzers.CodeFixes.Performance
 {
@@ -27,12 +25,16 @@ namespace Sellorio.Analyzers.CodeFixes.Performance
         {
             var root = await context.Document.GetSyntaxRootAsync(context.CancellationToken).ConfigureAwait(false);
             if (root == null)
+            {
                 return;
+            }
 
             var diagnostic = context.Diagnostics[0];
             var binaryExpression = FindBinaryExpression(root, diagnostic.Location.SourceSpan);
             if (!TryCreateReplacement(binaryExpression, out _))
+            {
                 return;
+            }
 
             context.RegisterCodeFix(
                 CreateDocumentCodeAction(
@@ -58,11 +60,15 @@ namespace Sellorio.Analyzers.CodeFixes.Performance
         {
             var root = await document.GetSyntaxRootAsync(cancellationToken).ConfigureAwait(false);
             if (root == null)
+            {
                 return document;
+            }
 
             var binaryExpression = FindBinaryExpression(root, diagnosticSpan);
             if (!TryCreateReplacement(binaryExpression, out var replacement))
+            {
                 return document;
+            }
 
             var updatedExpression = replacement
                 .WithLeadingTrivia(binaryExpression.GetLeadingTrivia())
@@ -80,19 +86,25 @@ namespace Sellorio.Analyzers.CodeFixes.Performance
         {
             replacement = null;
             if (binaryExpression == null)
+            {
                 return false;
+            }
 
             var zeroOnLeft = IsZeroLiteral(binaryExpression.Left);
             var zeroOnRight = IsZeroLiteral(binaryExpression.Right);
             if (zeroOnLeft == zeroOnRight)
+            {
                 return false;
+            }
 
             var memberAccess = zeroOnLeft
                 ? binaryExpression.Right as MemberAccessExpressionSyntax
                 : binaryExpression.Left as MemberAccessExpressionSyntax;
 
             if (!IsSupportedMemberAccess(memberAccess))
+            {
                 return false;
+            }
 
             var anyInvocation = CreateAnyInvocation(memberAccess.Expression.WithoutTrivia());
 
@@ -100,7 +112,9 @@ namespace Sellorio.Analyzers.CodeFixes.Performance
             {
                 case SyntaxKind.GreaterThanExpression:
                     if (!zeroOnRight)
+                    {
                         return false;
+                    }
 
                     replacement = anyInvocation;
                     return true;
@@ -121,7 +135,9 @@ namespace Sellorio.Analyzers.CodeFixes.Performance
         private static bool IsSupportedMemberAccess(MemberAccessExpressionSyntax memberAccess)
         {
             if (memberAccess == null)
+            {
                 return false;
+            }
 
             var memberName = memberAccess.Name.Identifier.ValueText;
             return memberName == "Count" || memberName == "Length";
@@ -166,10 +182,14 @@ namespace Sellorio.Analyzers.CodeFixes.Performance
         private static SyntaxNode AddSystemLinqUsingIfMissing(SyntaxNode root)
         {
             if (!(root is CompilationUnitSyntax compilationUnit))
+            {
                 return root;
+            }
 
             if (compilationUnit.Usings.Any(u => u.Alias == null && u.Name?.ToString() == "System.Linq"))
+            {
                 return root;
+            }
 
             return compilationUnit.AddUsings(SyntaxFactory.UsingDirective(SyntaxFactory.ParseName("System.Linq")));
         }

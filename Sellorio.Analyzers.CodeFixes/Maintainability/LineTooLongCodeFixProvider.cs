@@ -6,7 +6,6 @@ using System.Linq.Expressions;
 using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.CodeAnalysis;
-using Microsoft.CodeAnalysis.CodeActions;
 using Microsoft.CodeAnalysis.CodeFixes;
 using Microsoft.CodeAnalysis.CSharp;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
@@ -74,8 +73,7 @@ namespace Sellorio.Analyzers.CodeFixes.Maintainability
                 return false;
             }
 
-            List<string> rewrittenLines;
-            if (!TryFormatAssignmentLine(root, line, originalLine, position, semanticModel, cancellationToken, out rewrittenLines)
+            if (!TryFormatAssignmentLine(root, line, originalLine, position, semanticModel, cancellationToken, out var rewrittenLines)
                 && !TryFormatExpressionStatementLine(root, line, originalLine, position, semanticModel, cancellationToken, out rewrittenLines)
                 && !TryFormatIfStatementLine(root, line, originalLine, position, out rewrittenLines)
                 && !TryFormatReturnStatementLine(root, line, originalLine, position, semanticModel, cancellationToken, out rewrittenLines))
@@ -454,7 +452,7 @@ namespace Sellorio.Analyzers.CodeFixes.Maintainability
             chainRoot = null;
             chainSegments = new List<string>();
 
-            ExpressionSyntax current = expression;
+            var current = expression;
             while (true)
             {
                 var invocation = current as InvocationExpressionSyntax;

@@ -5,8 +5,8 @@ using Microsoft.CodeAnalysis.Diagnostics;
 
 namespace Sellorio.Analyzers.CodeAnalysis.Design
 {
-[DiagnosticAnalyzer(LanguageNames.CSharp)]
-public class PrivatePropertiesAreNotAllowedAnalyzer : AnalyzerBase<PrivatePropertiesAreNotAllowedAnalyzer>
+    [DiagnosticAnalyzer(LanguageNames.CSharp)]
+    public class PrivatePropertiesAreNotAllowedAnalyzer : AnalyzerBase<PrivatePropertiesAreNotAllowedAnalyzer>
     {
         internal override Expression<Func<DiagnosticDescriptorValues>> Descriptor => () => Descriptors.SE0003;
 

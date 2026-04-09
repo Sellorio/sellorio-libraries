@@ -13,7 +13,7 @@ namespace Sellorio.Analyzers.CodeAnalysis.Naming
     {
         internal override Expression<Func<DiagnosticDescriptorValues>> Descriptor => () => Descriptors.SE0029;
 
-        private static readonly string[] PreferredNames = { "x", "y", "z", "a" };
+        private static readonly string[] _preferredNames = { "x", "y", "z", "a" };
 
         protected override void RegisterActions(AnalysisContext context)
         {
@@ -33,7 +33,7 @@ namespace Sellorio.Analyzers.CodeAnalysis.Naming
             }
 
             // Find the nesting level based on parent lambda expressions
-            int nestingLevel = CalculateNestingLevel(context, invocation);
+            var nestingLevel = CalculateNestingLevel(context, invocation);
 
             // Check each argument that contains a lambda
             foreach (var argument in invocation.ArgumentList.Arguments)
@@ -44,7 +44,7 @@ namespace Sellorio.Analyzers.CodeAnalysis.Naming
 
         private int CalculateNestingLevel(SyntaxNodeAnalysisContext context, SyntaxNode node)
         {
-            int level = 0;
+            var level = 0;
             var current = node.Parent;
 
             while (current != null)
@@ -135,7 +135,7 @@ namespace Sellorio.Analyzers.CodeAnalysis.Naming
             var (paramName, paramLocation) = parameters[0];
 
             // Determine expected name based on nesting level
-            string expectedName = GetExpectedNameForLevel(nestingLevel);
+            var expectedName = GetExpectedNameForLevel(nestingLevel);
 
             // If expectedName is null, we're beyond the 4th level and no checking is needed
             if (expectedName == null)
@@ -176,9 +176,9 @@ namespace Sellorio.Analyzers.CodeAnalysis.Naming
 
         private string GetExpectedNameForLevel(int level)
         {
-            if (level >= 0 && level < PreferredNames.Length)
+            if (level >= 0 && level < _preferredNames.Length)
             {
-                return PreferredNames[level];
+                return _preferredNames[level];
             }
 
             // Beyond 'a', no further checking

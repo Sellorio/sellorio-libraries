@@ -19,7 +19,8 @@ public static class ServiceCollectionExtensions
 
         var validatorTypes =
             typeof(TAssembly).Assembly.GetTypes()
-                .Where(x => x.IsClass && !x.IsAbstract && x.GetInterface(nameof(IValidator<object>))?.Namespace == validatorInterfaceNamespace)
+                .Where(x => x.IsClass && !x.IsAbstract && x.GetInterface(nameof(IValidator<>))?.Namespace == validatorInterfaceNamespace)
+                .Where(x => x.IsClass && !x.IsAbstract && x.GetInterface(nameof(IValidator<>))?.Namespace == validatorInterfaceNamespace)
                 .ToList();
 
         foreach (var validatorType in validatorTypes)

@@ -13,7 +13,7 @@ namespace Sellorio.Analyzers.CodeAnalysis.Performance
     {
         internal override Expression<Func<DiagnosticDescriptorValues>> Descriptor => () => Descriptors.SE0027;
 
-        private static readonly Dictionary<string, string> ConvertMethodToType = new Dictionary<string, string>
+        private static readonly Dictionary<string, string> _convertMethodToType = new Dictionary<string, string>
         {
             { "ToBoolean", "bool" },
             { "ToByte", "byte" },
@@ -40,7 +40,7 @@ namespace Sellorio.Analyzers.CodeAnalysis.Performance
         {
             var invocation = (InvocationExpressionSyntax)context.Node;
 
-            if (!(invocation.Expression is MemberAccessExpressionSyntax memberAccess))
+            if (!(invocation.Expression is MemberAccessExpressionSyntax))
             {
                 return;
             }
@@ -59,7 +59,7 @@ namespace Sellorio.Analyzers.CodeAnalysis.Performance
 
             var methodName = methodSymbol.Name;
 
-            if (!ConvertMethodToType.ContainsKey(methodName))
+            if (!_convertMethodToType.ContainsKey(methodName))
             {
                 return;
             }
@@ -76,7 +76,7 @@ namespace Sellorio.Analyzers.CodeAnalysis.Performance
                 return;
             }
 
-            var typeName = ConvertMethodToType[methodName];
+            var typeName = _convertMethodToType[methodName];
 
             var diagnostic =
                 Diagnostic.Create(

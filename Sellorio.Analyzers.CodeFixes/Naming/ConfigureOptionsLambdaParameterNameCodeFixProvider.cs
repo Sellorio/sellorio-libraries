@@ -5,7 +5,6 @@ using System.Linq.Expressions;
 using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.CodeAnalysis;
-using Microsoft.CodeAnalysis.CodeActions;
 using Microsoft.CodeAnalysis.CodeFixes;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
 using Microsoft.CodeAnalysis.Rename;
@@ -25,12 +24,16 @@ namespace Sellorio.Analyzers.CodeFixes.Naming
         {
             var root = await context.Document.GetSyntaxRootAsync(context.CancellationToken).ConfigureAwait(false);
             if (root == null)
+            {
                 return;
+            }
 
             var diagnostic = context.Diagnostics[0];
             var parameter = FindParameter(root, diagnostic.Location.SourceSpan);
             if (parameter == null)
+            {
                 return;
+            }
 
             context.RegisterCodeFix(
                 CreateSolutionCodeAction(
@@ -54,16 +57,22 @@ namespace Sellorio.Analyzers.CodeFixes.Naming
         {
             var root = await document.GetSyntaxRootAsync(cancellationToken).ConfigureAwait(false);
             if (root == null)
+            {
                 return document.Project.Solution;
+            }
 
             var parameter = FindParameter(root, parameterSpan);
             if (parameter == null)
+            {
                 return document.Project.Solution;
+            }
 
             var semanticModel = await document.GetSemanticModelAsync(cancellationToken).ConfigureAwait(false);
             var parameterSymbol = semanticModel?.GetDeclaredSymbol(parameter, cancellationToken);
             if (parameterSymbol == null || parameterSymbol.Name == "o")
+            {
                 return document.Project.Solution;
+            }
 
             return await Renamer.RenameSymbolAsync(
                 document.Project.Solution,

@@ -2,7 +2,7 @@
 
 namespace Sellorio.Clients.Rest;
 
-public class UnauthorizedException : ApplicationException
+public class UnauthorizedException : Exception
 {
     public UnauthorizedException()
     {

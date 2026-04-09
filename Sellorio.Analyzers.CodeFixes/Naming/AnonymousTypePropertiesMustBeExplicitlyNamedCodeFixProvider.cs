@@ -5,7 +5,6 @@ using System.Linq.Expressions;
 using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.CodeAnalysis;
-using Microsoft.CodeAnalysis.CodeActions;
 using Microsoft.CodeAnalysis.CodeFixes;
 using Microsoft.CodeAnalysis.CSharp;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
@@ -26,16 +25,22 @@ namespace Sellorio.Analyzers.CodeFixes.Naming
         {
             var root = await context.Document.GetSyntaxRootAsync(context.CancellationToken).ConfigureAwait(false);
             if (root == null)
+            {
                 return;
+            }
 
             var diagnostic = context.Diagnostics[0];
             var declarator = FindAnonymousObjectMemberDeclarator(root, diagnostic.Location.SourceSpan);
             if (declarator == null || declarator.NameEquals != null)
+            {
                 return;
+            }
 
             var semanticModel = await context.Document.GetSemanticModelAsync(context.CancellationToken).ConfigureAwait(false);
             if (!TryGetImplicitPropertyName(declarator.Expression, semanticModel, context.CancellationToken, out _))
+            {
                 return;
+            }
 
             context.RegisterCodeFix(
                 CreateDocumentCodeAction(
@@ -58,15 +63,21 @@ namespace Sellorio.Analyzers.CodeFixes.Naming
         {
             var root = await document.GetSyntaxRootAsync(cancellationToken).ConfigureAwait(false);
             if (root == null)
+            {
                 return document;
+            }
 
             var declarator = FindAnonymousObjectMemberDeclarator(root, declarationSpan);
             if (declarator == null || declarator.NameEquals != null)
+            {
                 return document;
+            }
 
             var semanticModel = await document.GetSemanticModelAsync(cancellationToken).ConfigureAwait(false);
             if (!TryGetImplicitPropertyName(declarator.Expression, semanticModel, cancellationToken, out var propertyName))
+            {
                 return document;
+            }
 
             var explicitName = ToPascalCase(propertyName);
             var updatedDeclarator = declarator
@@ -157,7 +168,9 @@ namespace Sellorio.Analyzers.CodeFixes.Naming
                 .ToArray();
 
             if (parts.Length == 0)
+            {
                 return name;
+            }
 
             return string.Concat(parts.Select(Capitalize));
         }
@@ -165,10 +178,14 @@ namespace Sellorio.Analyzers.CodeFixes.Naming
         private static string Capitalize(string value)
         {
             if (value.Length == 0)
+            {
                 return value;
+            }
 
             if (value.Length == 1)
+            {
                 return value.ToUpperInvariant();
+            }
 
             return char.ToUpperInvariant(value[0]) + value.Substring(1);
         }

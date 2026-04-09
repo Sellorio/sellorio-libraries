@@ -1,14 +1,12 @@
 ﻿using Microsoft.CodeAnalysis.CSharp.Testing;
 using Microsoft.CodeAnalysis.Diagnostics;
 using Microsoft.CodeAnalysis.Testing;
-using Sellorio.Analyzers.Tests.Verifiers;
-
 namespace Sellorio.Analyzers.Tests.Verifiers;
 
 public static partial class CSharpAnalyzerVerifier<TAnalyzer>
     where TAnalyzer : DiagnosticAnalyzer, new()
 {
-    public class Test : CSharpAnalyzerTest<TAnalyzer, DefaultVerifier>
+    internal class Test : CSharpAnalyzerTest<TAnalyzer, DefaultVerifier>
     {
         public Test()
         {

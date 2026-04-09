@@ -13,16 +13,12 @@ internal sealed class DisableStateScope : IDisableStateScope
 
     public bool IsDisabled => _isInnerDisabled || _parent != null && _parent.IsDisabled;
 
-    public event Action? IsDisabledChanged;
+    public event EventHandler? IsDisabledChanged;
 
     public DisableStateScope(IDisableStateScope? parent, IDialogService dialogService)
     {
         _parent = parent;
-
-        if (_parent != null)
-        {
-            _parent.IsDisabledChanged += ParentDisableStateChanged;
-        }
+        _parent?.IsDisabledChanged += ParentDisableStateChanged;
 
         _dialogProvider = new(this, dialogService);
     }
@@ -32,20 +28,17 @@ internal sealed class DisableStateScope : IDisableStateScope
         if (_isInnerDisabled != isDisabled)
         {
             _isInnerDisabled = isDisabled;
-            IsDisabledChanged?.Invoke();
+            IsDisabledChanged?.Invoke(this, EventArgs.Empty);
         }
     }
 
     public void Dispose()
     {
-        if (_parent != null)
-        {
-            _parent.IsDisabledChanged -= ParentDisableStateChanged;
-        }
+        _parent?.IsDisabledChanged -= ParentDisableStateChanged;
     }
 
-    private void ParentDisableStateChanged()
+    private void ParentDisableStateChanged(object? sender, EventArgs e)
     {
-        IsDisabledChanged?.Invoke();
+        IsDisabledChanged?.Invoke(this, EventArgs.Empty);
     }
 }

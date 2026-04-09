@@ -5,7 +5,6 @@ using System.Linq.Expressions;
 using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.CodeAnalysis;
-using Microsoft.CodeAnalysis.CodeActions;
 using Microsoft.CodeAnalysis.CodeFixes;
 using Microsoft.CodeAnalysis.CSharp;
 using Microsoft.CodeAnalysis.Text;
@@ -24,13 +23,19 @@ namespace Sellorio.Analyzers.CodeFixes.Style
         {
             var root = await context.Document.GetSyntaxRootAsync(context.CancellationToken).ConfigureAwait(false);
             var text = await context.Document.GetTextAsync(context.CancellationToken).ConfigureAwait(false);
+
             if (root == null)
+            {
                 return;
+            }
 
             var diagnostic = context.Diagnostics[0];
             var closeParenToken = FindCloseParenToken(root, diagnostic.Location.SourceSpan);
+
             if (!TryCreateTextChanges(root, text, closeParenToken, out _, out _))
+            {
                 return;
+            }
 
             context.RegisterCodeFix(
                 CreateDocumentCodeAction(
@@ -52,14 +57,18 @@ namespace Sellorio.Analyzers.CodeFixes.Style
         {
             var root = await document.GetSyntaxRootAsync(cancellationToken).ConfigureAwait(false);
             var text = await document.GetTextAsync(cancellationToken).ConfigureAwait(false);
+
             if (root == null)
+            {
                 return document;
+            }
 
             var closeParenToken = FindCloseParenToken(root, diagnosticSpan);
-            if (!TryCreateTextChanges(root, text, closeParenToken, out var previousLineChange, out var closeParenLineChange))
-                return document;
 
-            return document.WithText(text.WithChanges(previousLineChange, closeParenLineChange));
+            return
+                !TryCreateTextChanges(root, text, closeParenToken, out var previousLineChange, out var closeParenLineChange)
+                    ? document
+                    : document.WithText(text.WithChanges(previousLineChange, closeParenLineChange));
         }
 
         private static bool TryCreateTextChanges(
@@ -71,17 +80,26 @@ namespace Sellorio.Analyzers.CodeFixes.Style
         {
             previousLineChange = default;
             closeParenLineChange = default;
+
             if (closeParenToken == default || !closeParenToken.IsKind(SyntaxKind.CloseParenToken))
+            {
                 return false;
+            }
 
             var closeParenLine = text.Lines.GetLineFromPosition(closeParenToken.SpanStart);
+
             if (closeParenLine.LineNumber == 0)
+            {
                 return false;
+            }
 
             var closeParenLineText = closeParenLine.ToString();
             var firstNonWhitespaceIndex = GetFirstNonWhitespaceIndex(closeParenLineText);
+
             if (firstNonWhitespaceIndex < 0 || closeParenLineText[firstNonWhitespaceIndex] != ')')
+            {
                 return false;
+            }
 
             var previousLine = text.Lines[closeParenLine.LineNumber - 1];
             var previousLineText = previousLine.ToString();
@@ -102,6 +120,7 @@ namespace Sellorio.Analyzers.CodeFixes.Style
             var mergedComment = MergeComments(
                 previousComment == default ? null : previousComment.ToString(),
                 currentComment == default ? null : currentComment.ToString());
+
             if (!string.IsNullOrEmpty(mergedComment))
             {
                 updatedPreviousLine += " " + mergedComment;
@@ -121,7 +140,9 @@ namespace Sellorio.Analyzers.CodeFixes.Style
             for (var index = 0; index < lineText.Length; index++)
             {
                 if (lineText[index] != ' ' && lineText[index] != '\t')
+                {
                     return index;
+                }
             }
 
             return -1;
@@ -130,27 +151,35 @@ namespace Sellorio.Analyzers.CodeFixes.Style
         private static string MergeComments(string previousComment, string currentComment)
         {
             if (string.IsNullOrEmpty(previousComment))
+            {
                 return currentComment;
+            }
 
             if (string.IsNullOrEmpty(currentComment))
+            {
                 return previousComment;
+            }
 
             var previousCommentBody = GetCommentBody(previousComment);
             var currentCommentBody = GetCommentBody(currentComment);
+
             if (string.IsNullOrEmpty(previousCommentBody))
+            {
                 return string.IsNullOrEmpty(currentCommentBody) ? "//" : "// " + currentCommentBody;
+            }
 
-            if (string.IsNullOrEmpty(currentCommentBody))
-                return "// " + previousCommentBody;
-
-            return "// " + previousCommentBody + ". " + currentCommentBody;
+            return
+                string.IsNullOrEmpty(currentCommentBody)
+                    ? "// " + previousCommentBody
+                    : "// " + previousCommentBody + ". " + currentCommentBody;
         }
 
         private static string GetCommentBody(string comment)
         {
-            var commentBody = comment.StartsWith("//", StringComparison.Ordinal)
-                ? comment.Substring(2)
-                : comment;
+            var commentBody =
+                comment.StartsWith("//", StringComparison.Ordinal)
+                    ? comment.Substring(2)
+                    : comment;
 
             return commentBody.Trim();
         }

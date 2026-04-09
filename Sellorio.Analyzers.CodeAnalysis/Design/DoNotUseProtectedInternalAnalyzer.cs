@@ -6,7 +6,6 @@ using Microsoft.CodeAnalysis.CSharp;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
 using Microsoft.CodeAnalysis.Diagnostics;
 using Microsoft.CodeAnalysis.Text;
-using Sellorio.Analyzers.CodeAnalysis;
 
 namespace Sellorio.Analyzers.CodeAnalysis.Design
 {
@@ -26,7 +25,9 @@ namespace Sellorio.Analyzers.CodeAnalysis.Design
         private void AnalyzeProperty(SymbolAnalysisContext context)
         {
             if (context.Symbol.DeclaredAccessibility != Accessibility.ProtectedOrInternal)
+            {
                 return;
+            }
 
             foreach (var syntaxRef in context.Symbol.DeclaringSyntaxReferences)
             {
@@ -58,22 +59,28 @@ namespace Sellorio.Analyzers.CodeAnalysis.Design
         private static SyntaxTokenList GetModifiers(SyntaxNode node)
         {
             if (node is MemberDeclarationSyntax member)
+            {
                 return member.Modifiers;
+            }
 
             if (node is AccessorDeclarationSyntax accessor)
+            {
                 return accessor.Modifiers;
+            }
 
             // For variable declarators (fields/events), walk up to the containing member declaration
             var parent = node.Parent;
             while (parent != null)
             {
                 if (parent is MemberDeclarationSyntax parentMember)
+                {
                     return parentMember.Modifiers;
+                }
 
                 parent = parent.Parent;
             }
 
-            return default(SyntaxTokenList);
+            return default;
         }
     }
 }

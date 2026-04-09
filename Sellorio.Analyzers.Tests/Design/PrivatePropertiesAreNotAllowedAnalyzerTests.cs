@@ -1,6 +1,5 @@
 using System;
 using System.Collections.Generic;
-using System.Collections.Immutable;
 using System.IO;
 using System.Linq;
 using System.Threading;
@@ -11,6 +10,8 @@ using Microsoft.CodeAnalysis.CodeFixes;
 using Microsoft.CodeAnalysis.CSharp;
 using Microsoft.CodeAnalysis.Diagnostics;
 using Microsoft.CodeAnalysis.Text;
+using Sellorio.Analyzers.CodeAnalysis.Design;
+using Sellorio.Analyzers.CodeFixes.Design;
 using Xunit;
 using VerifyCS = Sellorio.Analyzers.Tests.Verifiers.CSharpCodeFixVerifier<
     Sellorio.Analyzers.CodeAnalysis.Design.PrivatePropertiesAreNotAllowedAnalyzer,
@@ -148,14 +149,14 @@ public class TestClass
             .AddDocument(documentId, "TestClass.cs", SourceText.From(source));
         var document = solution.GetDocument(documentId);
         var compilation = await document.Project.GetCompilationAsync();
-        var analyzer = new Sellorio.Analyzers.CodeAnalysis.Design.PrivatePropertiesAreNotAllowedAnalyzer();
+        var analyzer = new PrivatePropertiesAreNotAllowedAnalyzer();
         var diagnostics = await compilation
-            .WithAnalyzers(ImmutableArray.Create<DiagnosticAnalyzer>(analyzer))
+            .WithAnalyzers([analyzer])
             .GetAnalyzerDiagnosticsAsync();
         var diagnostic = Assert.Single(diagnostics);
 
         var actions = new List<CodeAction>();
-        var codeFixProvider = new Sellorio.Analyzers.CodeFixes.Design.PrivatePropertiesAreNotAllowedCodeFixProvider();
+        var codeFixProvider = new PrivatePropertiesAreNotAllowedCodeFixProvider();
         var context = new CodeFixContext(document, diagnostic, (action, _) => actions.Add(action), CancellationToken.None);
         await codeFixProvider.RegisterCodeFixesAsync(context);
 

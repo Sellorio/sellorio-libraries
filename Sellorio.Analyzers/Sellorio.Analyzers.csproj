@@ -8,7 +8,18 @@
     <IncludeBuildOutput>false</IncludeBuildOutput>
     <NoPackageAnalysis>true</NoPackageAnalysis>
     <DisableProjectReferencePackageConversion>true</DisableProjectReferencePackageConversion>
+    <NuspecTemplateFile>Sellorio.Analyzers.nuspec</NuspecTemplateFile>
+    <NuspecFile>$(BaseIntermediateOutputPath)$(Configuration)\Sellorio.Analyzers.generated.nuspec</NuspecFile>
+    <NuspecBasePath>$(BaseIntermediateOutputPath)$(Configuration)\empty\</NuspecBasePath>
   </PropertyGroup>
+
+  <Target Name="WriteSellorioAnalyzersNuspec" BeforeTargets="GenerateNuspec">
+    <MakeDir Directories="$(NuspecBasePath)" />
+    <Copy SourceFiles="$(NuspecTemplateFile)" DestinationFiles="$(NuspecFile)" />
+    <XmlPoke XmlInputPath="$(NuspecFile)" Query="/package/metadata/version" Value="$(Version)" />
+    <XmlPoke XmlInputPath="$(NuspecFile)" Query="/package/metadata/dependencies/group/dependency[@id='Sellorio.Analyzers.CodeAnalysis']/@version" Value="$(Version)" />
+    <XmlPoke XmlInputPath="$(NuspecFile)" Query="/package/metadata/dependencies/group/dependency[@id='Sellorio.Analyzers.CodeFixes']/@version" Value="$(Version)" />
+  </Target>
 
   <ItemGroup>
     <PackageReference Include="Roslynator.Analyzers" Version="4.15.0">

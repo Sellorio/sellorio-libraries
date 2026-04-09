@@ -1,6 +1,5 @@
 using System;
 using System.Collections.Generic;
-using System.Collections.Immutable;
 using System.IO;
 using System.Linq;
 using System.Threading;
@@ -11,6 +10,8 @@ using Microsoft.CodeAnalysis.CodeFixes;
 using Microsoft.CodeAnalysis.CSharp;
 using Microsoft.CodeAnalysis.Diagnostics;
 using Microsoft.CodeAnalysis.Text;
+using Sellorio.Analyzers.CodeAnalysis.Style;
+using Sellorio.Analyzers.CodeFixes.Style;
 using Xunit;
 using VerifyCS = Sellorio.Analyzers.Tests.Verifiers.CSharpCodeFixVerifier<
     Sellorio.Analyzers.CodeAnalysis.Style.DoNotUseMultilineCommentsAnalyzer,
@@ -241,15 +242,15 @@ public class TestClass
             .AddMetadataReferences(projectId, GetMetadataReferences())
             .AddDocument(documentId, "Test.cs", SourceText.From(source));
 
-        var document = solution.GetDocument(documentId)!;
+        var document = solution.GetDocument(documentId);
         var compilation = await document.Project.GetCompilationAsync().ConfigureAwait(false);
-        var diagnostics = await compilation!
-            .WithAnalyzers(ImmutableArray.Create<DiagnosticAnalyzer>(new Sellorio.Analyzers.CodeAnalysis.Style.DoNotUseMultilineCommentsAnalyzer()))
+        var diagnostics = await compilation
+            .WithAnalyzers([new DoNotUseMultilineCommentsAnalyzer()])
             .GetAnalyzerDiagnosticsAsync()
             .ConfigureAwait(false);
 
         var actions = new List<CodeAction>();
-        var provider = new Sellorio.Analyzers.CodeFixes.Style.DoNotUseMultilineCommentsCodeFixProvider();
+        var provider = new DoNotUseMultilineCommentsCodeFixProvider();
         var context = new CodeFixContext(document, diagnostics[0], (action, _) => actions.Add(action), CancellationToken.None);
         await provider.RegisterCodeFixesAsync(context).ConfigureAwait(false);
         return actions;
@@ -257,9 +258,9 @@ public class TestClass
 
     private static IEnumerable<MetadataReference> GetMetadataReferences()
     {
-        var trustedPlatformAssemblies = ((string?)AppContext.GetData("TRUSTED_PLATFORM_ASSEMBLIES"))
+        var trustedPlatformAssemblies = (AppContext.GetData("TRUSTED_PLATFORM_ASSEMBLIES") as string)
             ?.Split(Path.PathSeparator)
-            ?? Array.Empty<string>();
+            ?? [];
 
         return trustedPlatformAssemblies.Select(path => MetadataReference.CreateFromFile(path));
     }

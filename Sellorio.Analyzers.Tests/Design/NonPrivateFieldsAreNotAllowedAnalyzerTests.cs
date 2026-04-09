@@ -42,6 +42,17 @@ public class TestClass
     }
 
     [Fact]
+    public async Task NoDiagnostic_EnumMember()
+    {
+        var source = @"
+public enum TestEnum
+{
+    Value,
+} ";
+        await VerifyCS.VerifyAnalyzerAsync(source);
+    }
+
+    [Fact]
     public async Task CodeFix_ConvertsFieldToPropertyAndRenamesReferences()
     {
         var source = @"

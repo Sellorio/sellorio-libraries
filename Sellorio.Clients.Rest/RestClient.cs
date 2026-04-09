@@ -15,60 +15,60 @@ internal class RestClient(HttpClient httpClient, IRestClientAuthorizationProvide
 {
     public Task<HttpResponseMessage> Get(FormattableString url)
     {
-        return ExecuteRequest(url, HttpMethod.Get);
+        return ExecuteRequestAsync(url, HttpMethod.Get);
     }
 
     public Task<HttpResponseMessage> Post(FormattableString url)
     {
-        return ExecuteRequest(url, HttpMethod.Post);
+        return ExecuteRequestAsync(url, HttpMethod.Post);
     }
 
     public Task<HttpResponseMessage> Post(FormattableString url, object body)
     {
-        return ExecuteRequest(url, HttpMethod.Post, body);
+        return ExecuteRequestAsync(url, HttpMethod.Post, body);
     }
 
     public Task<HttpResponseMessage> Post(FormattableString url, Stream body)
     {
-        return ExecuteRequest(url, HttpMethod.Post, body);
+        return ExecuteRequestAsync(url, HttpMethod.Post, body);
     }
 
     public Task<HttpResponseMessage> Put(FormattableString url)
     {
-        return ExecuteRequest(url, HttpMethod.Put);
+        return ExecuteRequestAsync(url, HttpMethod.Put);
     }
 
     public Task<HttpResponseMessage> Put(FormattableString url, object body)
     {
-        return ExecuteRequest(url, HttpMethod.Put, body);
+        return ExecuteRequestAsync(url, HttpMethod.Put, body);
     }
 
     public Task<HttpResponseMessage> Put(FormattableString url, Stream body)
     {
-        return ExecuteRequest(url, HttpMethod.Put, body);
+        return ExecuteRequestAsync(url, HttpMethod.Put, body);
     }
 
     public Task<HttpResponseMessage> Patch(FormattableString url)
     {
-        return ExecuteRequest(url, HttpMethod.Patch);
+        return ExecuteRequestAsync(url, HttpMethod.Patch);
     }
 
     public Task<HttpResponseMessage> Patch(FormattableString url, object body)
     {
-        return ExecuteRequest(url, HttpMethod.Patch, body);
+        return ExecuteRequestAsync(url, HttpMethod.Patch, body);
     }
 
     public Task<HttpResponseMessage> Patch(FormattableString url, Stream body)
     {
-        return ExecuteRequest(url, HttpMethod.Patch, body);
+        return ExecuteRequestAsync(url, HttpMethod.Patch, body);
     }
 
     public Task<HttpResponseMessage> Delete(FormattableString url)
     {
-        return ExecuteRequest(url, HttpMethod.Delete);
+        return ExecuteRequestAsync(url, HttpMethod.Delete);
     }
 
-    private async Task<HttpResponseMessage> ExecuteRequest(FormattableString url, HttpMethod method, object? body = null)
+    private async Task<HttpResponseMessage> ExecuteRequestAsync(FormattableString url, HttpMethod method, object? body = null)
     {
         var uri = ParseUri(url);
         using var request = new HttpRequestMessage(method, uri);
@@ -77,11 +77,24 @@ internal class RestClient(HttpClient httpClient, IRestClientAuthorizationProvide
         {
             if (body is Stream stream)
             {
-                var content = new MultipartFormDataContent();
-                var streamContent = new StreamContent(stream);
-                streamContent.Headers.ContentType = new(MediaTypeNames.Application.Octet);
-                content.Add(streamContent, "file", "file");
-                request.Content = content;
+                MultipartFormDataContent? content = null;
+                StreamContent? streamContent = null;
+
+                try
+                {
+                    content = new MultipartFormDataContent();
+                    streamContent = new StreamContent(stream);
+                    streamContent.Headers.ContentType = new(MediaTypeNames.Application.Octet);
+                    content.Add(streamContent, "file", "file");
+                    request.Content = content;
+                    content = null;
+                    streamContent = null;
+                }
+                finally
+                {
+                    streamContent?.Dispose();
+                    content?.Dispose();
+                }
             }
             else
             {

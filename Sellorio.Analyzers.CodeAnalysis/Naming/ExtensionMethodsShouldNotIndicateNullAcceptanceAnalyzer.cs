@@ -5,8 +5,6 @@ using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
 using Microsoft.CodeAnalysis.Diagnostics;
-using Sellorio.Analyzers.CodeAnalysis;
-
 namespace Sellorio.Analyzers.CodeAnalysis.Naming
 {
     [DiagnosticAnalyzer(LanguageNames.CSharp)]
@@ -14,7 +12,7 @@ namespace Sellorio.Analyzers.CodeAnalysis.Naming
     {
         internal override Expression<Func<DiagnosticDescriptorValues>> Descriptor => () => Descriptors.SE0023;
 
-        private static readonly string[] ProhibitedPrefixes = new[]
+        private static readonly string[] _prohibitedPrefixes = new[]
         {
             "IsNull",
             "WhenNull",
@@ -42,7 +40,7 @@ namespace Sellorio.Analyzers.CodeAnalysis.Naming
             var methodName = methodDeclaration.Identifier.Text;
 
             // Check if the method name starts with any prohibited prefix
-            foreach (var prefix in ProhibitedPrefixes)
+            foreach (var prefix in _prohibitedPrefixes)
             {
                 if (methodName.StartsWith(prefix, StringComparison.Ordinal))
                 {

@@ -26,7 +26,7 @@ internal static class ExtensionsForControllers
         return new ObjectResult(result) { StatusCode = (int)failureStatusCode };
     }
 
-    public static async Task<IActionResult> ToActionResult(
+    public static async Task<IActionResult> ToActionResultAsync(
         this Task<IResult> result,
         HttpStatusCode successStatusCode = HttpStatusCode.OK,
         HttpStatusCode failureStatusCode = HttpStatusCode.BadRequest)
@@ -34,7 +34,7 @@ internal static class ExtensionsForControllers
         return ToActionResult(await result, successStatusCode, failureStatusCode);
     }
 
-    public static async Task<IActionResult> ToActionResult(
+    public static async Task<IActionResult> ToActionResultAsync(
         this Task<Result> result,
         HttpStatusCode successStatusCode = HttpStatusCode.OK,
         HttpStatusCode failureStatusCode = HttpStatusCode.BadRequest)
@@ -42,7 +42,7 @@ internal static class ExtensionsForControllers
         return ToActionResult(await result, successStatusCode, failureStatusCode);
     }
 
-    public static async Task<IActionResult> ToActionResult<TContext>(
+    public static async Task<IActionResult> ToActionResultAsync<TContext>(
         this Task<Result<TContext>> result,
         HttpStatusCode successStatusCode = HttpStatusCode.OK,
         HttpStatusCode failureStatusCode = HttpStatusCode.BadRequest)
@@ -50,7 +50,7 @@ internal static class ExtensionsForControllers
         return ToActionResult(await result, successStatusCode, failureStatusCode);
     }
 
-    public static async Task<IActionResult> ToActionResult<TValue>(
+    public static async Task<IActionResult> ToActionResultAsync<TValue>(
         this Task<ValueResult<TValue>> result,
         HttpStatusCode successStatusCode = HttpStatusCode.OK,
         HttpStatusCode failureStatusCode = HttpStatusCode.BadRequest)
@@ -58,7 +58,7 @@ internal static class ExtensionsForControllers
         return ToActionResult(await result, successStatusCode, failureStatusCode);
     }
 
-    public static async Task<IActionResult> ToActionResult<TContext, TValue>(
+    public static async Task<IActionResult> ToActionResultAsync<TContext, TValue>(
         this Task<ValueResult<TContext, TValue>> result,
         HttpStatusCode successStatusCode = HttpStatusCode.OK,
         HttpStatusCode failureStatusCode = HttpStatusCode.BadRequest)

@@ -81,7 +81,7 @@ public static class ExtensionsForValidationBuilder
                     {
                         int? count = null;
 
-                        if (count == null && validate is ICollection collection)
+                        if (validate is ICollection collection)
                         {
                             count = collection.Count;
                         }

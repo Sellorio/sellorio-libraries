@@ -189,7 +189,9 @@ dotnet_diagnostic.CA1714.severity = warning
 
 # Identifiers should not match keywords
 # https://learn.microsoft.com/en-us/dotnet/fundamentals/code-analysis/quality-rules/ca1716
-dotnet_diagnostic.CA1716.severity = warning
+dotnet_diagnostic.CA1716.severity = silent
+    # This will flag on silly things like having a parameter called "optional" which
+    # is completely reasonable to have.
 
 # Only FlagsAttribute enums should have plural names
 # https://learn.microsoft.com/en-us/dotnet/fundamentals/code-analysis/quality-rules/ca1717
@@ -1137,19 +1139,26 @@ dotnet_naming_symbols.types.applicable_accessibilities = *
 dotnet_naming_rule.types_must_be_pascal_case.symbols = types
 dotnet_naming_rule.types_must_be_pascal_case.style = pascal_case
 dotnet_naming_rule.types_must_be_pascal_case.severity = warning
-# Interfaces
+# IInterfaces
 dotnet_naming_symbols.interfaces.applicable_kinds = interface
 dotnet_naming_symbols.interfaces.applicable_accessibilities = *
 dotnet_naming_rule.interfaces_must_be_pascal_case.symbols = interfaces
 dotnet_naming_rule.interfaces_must_be_pascal_case.style = i_pascal_case
 dotnet_naming_rule.interfaces_must_be_pascal_case.severity = warning
-# Private Fields
+# _privateFields
 dotnet_naming_symbols.private_fields.applicable_kinds = field
 dotnet_naming_symbols.private_fields.applicable_accessibilities = private
 dotnet_naming_rule.private_fields_must_be_underscore_camel_case.symbols = private_fields
 dotnet_naming_rule.private_fields_must_be_underscore_camel_case.style = underscore_camel_case
 dotnet_naming_rule.private_fields_must_be_underscore_camel_case.severity = warning
-# Type Parameters
+# PrivateConstFields
+dotnet_naming_symbols.private_const_fields.applicable_kinds = field
+dotnet_naming_symbols.private_const_fields.applicable_accessibilities = private
+dotnet_naming_symbols.private_const_fields.required_modifiers = const
+dotnet_naming_rule.private_const_fields_must_be_pascal_case.symbols = private_const_fields
+dotnet_naming_rule.private_const_fields_must_be_pascal_case.style = pascal_case
+dotnet_naming_rule.private_const_fields_must_be_pascal_case.severity = warning
+# TTypeParameters
 dotnet_naming_symbols.type_parameters.applicable_kinds = type_parameter
 dotnet_naming_symbols.type_parameters.applicable_accessibilities = *
 dotnet_naming_rule.type_parameters_must_be_t_pascal_case.symbols = type_parameters
@@ -1167,20 +1176,20 @@ dotnet_naming_symbols.properties_and_events.applicable_accessibilities = *
 dotnet_naming_rule.properties_and_events_must_be_pascal_case.symbols = properties_and_events
 dotnet_naming_rule.properties_and_events_must_be_pascal_case.style = pascal_case
 dotnet_naming_rule.properties_and_events_must_be_pascal_case.severity = warning
-# Parameters and Locals
+# parameters and locals
 dotnet_naming_symbols.parameters_and_locals.applicable_kinds = parameter,local
 dotnet_naming_symbols.parameters_and_locals.applicable_accessibilities = *
 dotnet_naming_rule.parameters_and_locals_must_be_camel_case.symbols = parameters_and_locals
 dotnet_naming_rule.parameters_and_locals_must_be_camel_case.style = camel_case
 dotnet_naming_rule.parameters_and_locals_must_be_camel_case.severity = warning
-# Const Locals
+# ConstLocals
 dotnet_naming_symbols.const_locals.applicable_kinds = local
 dotnet_naming_symbols.const_locals.applicable_accessibilities = *
 dotnet_naming_symbols.const_locals.required_modifiers = const
 dotnet_naming_rule.const_locals_must_be_pascal_case.symbols = const_locals
 dotnet_naming_rule.const_locals_must_be_pascal_case.style = pascal_case
 dotnet_naming_rule.const_locals_must_be_pascal_case.severity = warning
-# Async Methods
+# MethodsAsync
 dotnet_naming_symbols.async_methods.applicable_kinds = method,local_function
 dotnet_naming_symbols.async_methods.applicable_accessibilities = *
 dotnet_naming_symbols.async_methods.required_modifiers = async

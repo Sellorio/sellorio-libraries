@@ -12,7 +12,7 @@ namespace Sellorio.Analyzers.CodeAnalysis.Usage
     {
         internal override Expression<Func<DiagnosticDescriptorValues>> Descriptor => () => Descriptors.SE0024;
 
-        private static readonly string[] ProhibitedPrefixes = new[]
+        private static readonly string[] _prohibitedPrefixes = new[]
         {
             "IsNull",
             "WhenNull",
@@ -49,25 +49,15 @@ namespace Sellorio.Analyzers.CodeAnalysis.Usage
             var methodName = methodSymbol.Name;
 
             // Check if the method name starts with any prohibited prefix
-            foreach (var prefix in ProhibitedPrefixes)
+            foreach (var prefix in _prohibitedPrefixes)
             {
                 if (methodName.StartsWith(prefix, StringComparison.Ordinal))
                 {
-                    // Get the location of the method name in the invocation
-                    Location location = null;
-
-                    if (invocation.Expression is MemberAccessExpressionSyntax memberAccess)
-                    {
-                        location = memberAccess.Name.GetLocation();
-                    }
-                    else if (invocation.Expression is IdentifierNameSyntax identifier)
-                    {
-                        location = identifier.GetLocation();
-                    }
-                    else
-                    {
-                        location = invocation.GetLocation();
-                    }
+                    var location = invocation.Expression is MemberAccessExpressionSyntax memberAccess
+                        ? memberAccess.Name.GetLocation()
+                        : invocation.Expression is IdentifierNameSyntax identifier
+                            ? identifier.GetLocation()
+                            : invocation.GetLocation();
 
                     var diagnostic = Diagnostic.Create(
                         DiagnosticDescriptor,

@@ -6,7 +6,6 @@ using System.Linq.Expressions;
 using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.CodeAnalysis;
-using Microsoft.CodeAnalysis.CodeActions;
 using Microsoft.CodeAnalysis.CodeFixes;
 using Microsoft.CodeAnalysis.CSharp;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
@@ -27,12 +26,16 @@ namespace Sellorio.Analyzers.CodeFixes.Style
             var root = await context.Document.GetSyntaxRootAsync(context.CancellationToken).ConfigureAwait(false);
             var text = await context.Document.GetTextAsync(context.CancellationToken).ConfigureAwait(false);
             if (root == null)
+            {
                 return;
+            }
 
             var diagnostic = context.Diagnostics[0];
             var conditionalExpression = FindConditionalExpression(root, diagnostic.Location.SourceSpan);
             if (!TryCreateTextChanges(conditionalExpression, text, out _))
+            {
                 return;
+            }
 
             context.RegisterCodeFix(
                 CreateDocumentCodeAction(
@@ -50,11 +53,15 @@ namespace Sellorio.Analyzers.CodeFixes.Style
             var root = await document.GetSyntaxRootAsync(cancellationToken).ConfigureAwait(false);
             var text = await document.GetTextAsync(cancellationToken).ConfigureAwait(false);
             if (root == null)
+            {
                 return document;
+            }
 
             var conditionalExpression = FindConditionalExpression(root, diagnosticSpan);
             if (!TryCreateTextChanges(conditionalExpression, text, out var changes))
+            {
                 return document;
+            }
 
             return document.WithText(text.WithChanges(changes));
         }
@@ -66,12 +73,16 @@ namespace Sellorio.Analyzers.CodeFixes.Style
         {
             changes = null;
             if (conditionalExpression == null)
+            {
                 return false;
+            }
 
             var questionToken = conditionalExpression.QuestionToken;
             var colonToken = conditionalExpression.ColonToken;
             if (questionToken == default || colonToken == default)
+            {
                 return false;
+            }
 
             if (!HasOnlySupportedTrivia(
                     conditionalExpression.Condition.GetLastToken().TrailingTrivia
@@ -90,7 +101,9 @@ namespace Sellorio.Analyzers.CodeFixes.Style
             var startLine = text.Lines.GetLineFromPosition(conditionalExpression.SpanStart);
             var endLine = text.Lines.GetLineFromPosition(conditionalExpression.Span.End);
             if (startLine.LineNumber == endLine.LineNumber)
+            {
                 return false;
+            }
 
             var lineBreakText = GetLineBreakText(text, startLine.LineNumber);
             var indentation = GetLeadingWhitespace(startLine.ToString()) + "    ";

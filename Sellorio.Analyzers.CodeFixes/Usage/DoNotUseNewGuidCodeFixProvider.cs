@@ -5,14 +5,12 @@ using System.Linq.Expressions;
 using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.CodeAnalysis;
-using Microsoft.CodeAnalysis.CodeActions;
 using Microsoft.CodeAnalysis.CodeFixes;
 using Microsoft.CodeAnalysis.CSharp;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
 using Microsoft.CodeAnalysis.Formatting;
-using Sellorio.Analyzers.CodeAnalysis;
 using Microsoft.CodeAnalysis.Text;
-using Sellorio.Analyzers.CodeFixes;
+using Sellorio.Analyzers.CodeAnalysis;
 
 namespace Sellorio.Analyzers.CodeFixes.Usage
 {
@@ -31,7 +29,9 @@ namespace Sellorio.Analyzers.CodeFixes.Usage
             var root = await context.Document.GetSyntaxRootAsync(context.CancellationToken).ConfigureAwait(false);
             var semanticModel = await context.Document.GetSemanticModelAsync(context.CancellationToken).ConfigureAwait(false);
             if (root == null || semanticModel == null)
+            {
                 return;
+            }
 
             var diagnostic = context.Diagnostics[0];
             var objectCreation = FindObjectCreation(root, diagnostic.Location.SourceSpan);
@@ -74,11 +74,15 @@ namespace Sellorio.Analyzers.CodeFixes.Usage
             var root = await document.GetSyntaxRootAsync(cancellationToken).ConfigureAwait(false);
             var semanticModel = await document.GetSemanticModelAsync(cancellationToken).ConfigureAwait(false);
             if (root == null || semanticModel == null)
+            {
                 return document;
+            }
 
             var objectCreation = FindObjectCreation(root, diagnosticSpan);
             if (!TryCreateReplacement(objectCreation, semanticModel, document.Project.ParseOptions as CSharpParseOptions, replacementKind, out var replacement, out _))
+            {
                 return document;
+            }
 
             var updatedExpression = replacement
                 .WithLeadingTrivia(objectCreation.GetLeadingTrivia())
@@ -100,11 +104,15 @@ namespace Sellorio.Analyzers.CodeFixes.Usage
             replacement = null;
             title = null;
             if (objectCreation == null)
+            {
                 return false;
+            }
 
             var typeSymbol = semanticModel.GetTypeInfo(objectCreation).Type;
             if (!IsGuid(typeSymbol))
+            {
                 return false;
+            }
 
             var typeName = typeSymbol.ToMinimalDisplayString(semanticModel, objectCreation.SpanStart);
             switch (replacementKind)
@@ -140,10 +148,14 @@ namespace Sellorio.Analyzers.CodeFixes.Usage
             ITypeSymbol typeSymbol)
         {
             if (parseOptions == null || parseOptions.LanguageVersion < LanguageVersion.CSharp7_1)
+            {
                 return false;
+            }
 
             if (objectCreation is ImplicitObjectCreationExpressionSyntax || HasExplicitTargetType(objectCreation, semanticModel))
+            {
                 return true;
+            }
 
             var defaultLiteral = SyntaxFactory.LiteralExpression(SyntaxKind.DefaultLiteralExpression);
             var typeInfo = semanticModel.GetSpeculativeTypeInfo(
@@ -196,7 +208,9 @@ namespace Sellorio.Analyzers.CodeFixes.Usage
         {
             var returnStatement = expression.Parent as ReturnStatementSyntax;
             if (returnStatement == null)
+            {
                 return null;
+            }
 
             var member = returnStatement.Parent?.Parent;
             switch (member)

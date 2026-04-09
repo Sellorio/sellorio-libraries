@@ -36,7 +36,6 @@ namespace Sellorio.Analyzers.CodeAnalysis.Maintainability
                 context,
                 methodDeclaration.Body,
                 methodDeclaration.ExpressionBody,
-                methodDeclaration.Identifier.GetLocation(),
                 methodDeclaration.Identifier.ValueText,
                 GetExcludedSpans(methodDeclaration));
         }
@@ -54,7 +53,6 @@ namespace Sellorio.Analyzers.CodeAnalysis.Maintainability
                 context,
                 localFunction.Body,
                 localFunction.ExpressionBody,
-                localFunction.Identifier.GetLocation(),
                 localFunction.Identifier.ValueText,
                 Array.Empty<TextSpan>());
         }
@@ -63,7 +61,6 @@ namespace Sellorio.Analyzers.CodeAnalysis.Maintainability
             SyntaxNodeAnalysisContext context,
             BlockSyntax blockBody,
             ArrowExpressionClauseSyntax expressionBody,
-            Location identifierLocation,
             string methodName,
             IReadOnlyList<TextSpan> excludedSpans)
         {

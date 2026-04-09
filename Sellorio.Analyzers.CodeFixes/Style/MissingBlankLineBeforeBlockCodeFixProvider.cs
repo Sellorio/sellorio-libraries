@@ -4,7 +4,6 @@ using System.Linq.Expressions;
 using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.CodeAnalysis;
-using Microsoft.CodeAnalysis.CodeActions;
 using Microsoft.CodeAnalysis.CodeFixes;
 using Microsoft.CodeAnalysis.Text;
 using Sellorio.Analyzers.CodeAnalysis;
@@ -22,6 +21,7 @@ namespace Sellorio.Analyzers.CodeFixes.Style
         {
             var root = await context.Document.GetSyntaxRootAsync(context.CancellationToken).ConfigureAwait(false);
             var text = await context.Document.GetTextAsync(context.CancellationToken).ConfigureAwait(false);
+
             if (root == null)
             {
                 return;
@@ -29,6 +29,7 @@ namespace Sellorio.Analyzers.CodeFixes.Style
 
             var diagnostic = context.Diagnostics[0];
             var blockToken = root.FindToken(diagnostic.Location.SourceSpan.Start);
+
             if (!TryCreateTextChange(text, blockToken, out _))
             {
                 return;

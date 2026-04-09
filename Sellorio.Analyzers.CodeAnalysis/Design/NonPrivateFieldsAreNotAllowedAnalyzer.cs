@@ -25,6 +25,11 @@ namespace Sellorio.Analyzers.CodeAnalysis.Design
         {
             var fieldSymbol = (IFieldSymbol)context.Symbol;
 
+            if (fieldSymbol.ContainingType?.TypeKind == TypeKind.Enum)
+            {
+                return;
+            }
+
             if (fieldSymbol.DeclaredAccessibility != Accessibility.Private)
             {
                 var diagnostic =

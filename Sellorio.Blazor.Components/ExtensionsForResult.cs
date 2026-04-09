@@ -6,7 +6,7 @@ namespace Sellorio.Blazor.Components;
 
 public static class ExtensionsForResult
 {
-    public static async Task<Result> WithSuccessMessage(this Task<Result> resultTask, string message)
+    public static async Task<Result> WithSuccessMessageAsync(this Task<Result> resultTask, string message)
     {
         var result = await resultTask;
 
@@ -18,7 +18,7 @@ public static class ExtensionsForResult
         return result;
     }
 
-    public static async Task<Result<TContext>> WithSuccessMessage<TContext>(this Task<Result<TContext>> resultTask, string message)
+    public static async Task<Result<TContext>> WithSuccessMessageAsync<TContext>(this Task<Result<TContext>> resultTask, string message)
     {
         var result = await resultTask;
 
@@ -30,7 +30,7 @@ public static class ExtensionsForResult
         return result;
     }
 
-    public static async Task<ValueResult<TValue>> WithSuccessMessage<TValue>(this Task<ValueResult<TValue>> resultTask, string message)
+    public static async Task<ValueResult<TValue>> WithSuccessMessageAsync<TValue>(this Task<ValueResult<TValue>> resultTask, string message)
     {
         var result = await resultTask;
 
@@ -42,7 +42,7 @@ public static class ExtensionsForResult
         return result;
     }
 
-    public static async Task<ValueResult<TContext, TValue>> WithSuccessMessage<TContext, TValue>(this Task<ValueResult<TContext, TValue>> resultTask, string message)
+    public static async Task<ValueResult<TContext, TValue>> WithSuccessMessageAsync<TContext, TValue>(this Task<ValueResult<TContext, TValue>> resultTask, string message)
     {
         var result = await resultTask;
 

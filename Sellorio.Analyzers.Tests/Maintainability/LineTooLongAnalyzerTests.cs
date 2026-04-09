@@ -1,6 +1,4 @@
 using System.Collections.Generic;
-using System.Collections.Immutable;
-using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.CodeAnalysis;
@@ -8,6 +6,8 @@ using Microsoft.CodeAnalysis.CodeActions;
 using Microsoft.CodeAnalysis.CodeFixes;
 using Microsoft.CodeAnalysis.CSharp;
 using Microsoft.CodeAnalysis.Diagnostics;
+using Sellorio.Analyzers.CodeAnalysis.Maintainability;
+using Sellorio.Analyzers.CodeFixes.Maintainability;
 using Xunit;
 using VerifyCS = Sellorio.Analyzers.Tests.Verifiers.CSharpCodeFixVerifier<
     Sellorio.Analyzers.CodeAnalysis.Maintainability.LineTooLongAnalyzer,
@@ -416,36 +416,35 @@ class C
 
     private static async Task VerifyNoCodeFixAsync(string source)
     {
-        using (var workspace = new AdhocWorkspace())
-        {
-            var projectId = ProjectId.CreateNewId();
-            var documentId = DocumentId.CreateNewId(projectId);
-            var solution = workspace.CurrentSolution
-                .AddProject(projectId, "TestProject", "TestProject", LanguageNames.CSharp)
-                .WithProjectCompilationOptions(projectId, new CSharpCompilationOptions(OutputKind.DynamicallyLinkedLibrary))
-                .WithProjectParseOptions(projectId, new CSharpParseOptions(LanguageVersion.CSharp7_3))
-                .AddMetadataReference(projectId, MetadataReference.CreateFromFile(typeof(object).Assembly.Location))
-                .AddDocument(documentId, "Test.cs", source);
+        using var workspace = new AdhocWorkspace();
 
-            var project = solution.GetProject(projectId);
-            var document = project.GetDocument(documentId);
-            var compilation = await project.GetCompilationAsync();
-            var analyzer = new Sellorio.Analyzers.CodeAnalysis.Maintainability.LineTooLongAnalyzer();
-            var diagnostics = await compilation.WithAnalyzers(ImmutableArray.Create<DiagnosticAnalyzer>(analyzer)).GetAnalyzerDiagnosticsAsync();
+        var projectId = ProjectId.CreateNewId();
+        var documentId = DocumentId.CreateNewId(projectId);
+        var solution = workspace.CurrentSolution
+            .AddProject(projectId, "TestProject", "TestProject", LanguageNames.CSharp)
+            .WithProjectCompilationOptions(projectId, new CSharpCompilationOptions(OutputKind.DynamicallyLinkedLibrary))
+            .WithProjectParseOptions(projectId, new CSharpParseOptions(LanguageVersion.CSharp7_3))
+            .AddMetadataReference(projectId, MetadataReference.CreateFromFile(typeof(object).Assembly.Location))
+            .AddDocument(documentId, "Test.cs", source);
 
-            Assert.Single(diagnostics);
+        var project = solution.GetProject(projectId);
+        var document = project.GetDocument(documentId);
+        var compilation = await project.GetCompilationAsync();
+        var analyzer = new LineTooLongAnalyzer();
+        var diagnostics = await compilation.WithAnalyzers([analyzer]).GetAnalyzerDiagnosticsAsync();
 
-            var actions = new List<CodeAction>();
-            var codeFixProvider = new Sellorio.Analyzers.CodeFixes.Maintainability.LineTooLongCodeFixProvider();
-            var context = new CodeFixContext(
-                document,
-                diagnostics[0],
-                (action, _) => actions.Add(action),
-                CancellationToken.None);
+        Assert.Single(diagnostics);
 
-            await codeFixProvider.RegisterCodeFixesAsync(context);
+        var actions = new List<CodeAction>();
+        var codeFixProvider = new LineTooLongCodeFixProvider();
+        var context = new CodeFixContext(
+            document,
+            diagnostics[0],
+            (action, _) => actions.Add(action),
+            CancellationToken.None);
 
-            Assert.Empty(actions);
-        }
+        await codeFixProvider.RegisterCodeFixesAsync(context);
+
+        Assert.Empty(actions);
     }
 }

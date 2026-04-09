@@ -27,22 +27,31 @@ namespace Sellorio.Analyzers.CodeAnalysis.Design
             var parseOptions = classDecl.SyntaxTree.Options as CSharpParseOptions;
 
             if (!SupportsRecords(parseOptions))
+            {
                 return;
+            }
 
             var classSymbol = semanticModel.GetDeclaredSymbol(classDecl);
+
             if (!HasSupportedBaseType(classSymbol))
+            {
                 return;
+            }
 
             var properties = classDecl.Members
                 .OfType<PropertyDeclarationSyntax>()
                 .ToList();
 
             if (properties.Count == 0)
+            {
                 return;
+            }
 
             // Must all be read-only
             if (!properties.All(IsReadOnlyProperty))
+            {
                 return;
+            }
 
             // Collect constructor parameters (normal ctors)
             var constructors =
@@ -74,7 +83,9 @@ namespace Sellorio.Analyzers.CodeAnalysis.Design
             var allParams = allParameters.Concat(primaryCtorParams).ToList();
 
             if (allParams.Count == 0)
+            {
                 return;
+            }
 
             foreach (var property in properties)
             {
@@ -122,7 +133,9 @@ namespace Sellorio.Analyzers.CodeAnalysis.Design
                 foreach (var assignment in assignments)
                 {
                     if (!IsPropertyAssignment(property, assignment, model))
+                    {
                         continue;
+                    }
 
                     // KEY: RHS must be IDENTIFIER ONLY (no transformations)
                     if (assignment.Right is IdentifierNameSyntax identifier)
@@ -167,7 +180,8 @@ namespace Sellorio.Analyzers.CodeAnalysis.Design
             {
                 foreach (var param in parameterList.Parameters)
                 {
-                    var symbol = model.GetDeclaredSymbol(param) as IParameterSymbol;
+                    var symbol = model.GetDeclaredSymbol(param);
+
                     if (symbol != null)
                     {
                         result.Add(symbol);
@@ -213,7 +227,9 @@ namespace Sellorio.Analyzers.CodeAnalysis.Design
         private static bool SupportsRecords(CSharpParseOptions parseOptions)
         {
             if (parseOptions == null)
+            {
                 return true;
+            }
 
             var languageVersion = parseOptions.LanguageVersion;
 
@@ -223,7 +239,9 @@ namespace Sellorio.Analyzers.CodeAnalysis.Design
         private static bool HasSupportedBaseType(INamedTypeSymbol classSymbol)
         {
             if (classSymbol == null)
+            {
                 return false;
+            }
 
             var baseType = classSymbol.BaseType;
 
@@ -248,16 +266,22 @@ namespace Sellorio.Analyzers.CodeAnalysis.Design
                         // LHS must be a property
                         var leftSymbol = model.GetSymbolInfo(assignment.Left).Symbol as IPropertySymbol;
                         if (leftSymbol == null)
+                        {
                             return false;
+                        }
 
                         // RHS must be direct parameter (Identifier only)
                         if (!(assignment.Right is IdentifierNameSyntax identifier))
+                        {
                             return false;
+                        }
 
                         var rightSymbol = model.GetSymbolInfo(identifier).Symbol;
 
                         if (!parameters.Contains(rightSymbol, SymbolEqualityComparer.Default))
+                        {
                             return false;
+                        }
 
                         continue;
                     }
@@ -269,19 +293,27 @@ namespace Sellorio.Analyzers.CodeAnalysis.Design
             else if (ctor.ExpressionBody != null)
             {
                 if (!(ctor.ExpressionBody.Expression is AssignmentExpressionSyntax assignment))
+                {
                     return false;
+                }
 
                 var leftSymbol = model.GetSymbolInfo(assignment.Left).Symbol as IPropertySymbol;
                 if (leftSymbol == null)
+                {
                     return false;
+                }
 
                 if (!(assignment.Right is IdentifierNameSyntax identifier))
+                {
                     return false;
+                }
 
                 var rightSymbol = model.GetSymbolInfo(identifier).Symbol;
 
                 if (!parameters.Contains(rightSymbol, SymbolEqualityComparer.Default))
+                {
                     return false;
+                }
 
                 return true;
             }

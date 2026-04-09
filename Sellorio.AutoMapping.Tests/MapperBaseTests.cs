@@ -5,6 +5,9 @@ namespace Sellorio.AutoMapping.Tests;
 
 public class MapperBaseTests
 {
+    private static readonly int[] _oneTwoThree = [1, 2, 3];
+    private static readonly int[] _sevenEightNine = [7, 8, 9];
+
     [Fact]
     public void Convert_ReturnsNull_WhenSourceIsNullAndDestinationIsReferenceType()
     {
@@ -136,9 +139,9 @@ public class MapperBaseTests
     {
         var mapper = new TestMapper();
 
-        var arrayResult = mapper.Convert<long[]>(new[] { 1, 2, 3 });
+        var arrayResult = mapper.Convert<long[]>(_oneTwoThree);
         var collectionResult = mapper.Convert<Collection<long>>(new List<int> { 4, 5, 6 });
-        var customListResult = mapper.Convert<CustomLongList>(new[] { 7, 8, 9 });
+        var customListResult = mapper.Convert<CustomLongList>(_sevenEightNine);
 
         Assert.Equal(new long[] { 1, 2, 3 }, arrayResult);
         Assert.Equal(new long[] { 4, 5, 6 }, collectionResult);
@@ -165,7 +168,7 @@ public class MapperBaseTests
     {
         var mapper = new TestMapper();
 
-        var exception = Assert.Throws<InvalidOperationException>(() => mapper.Convert<PersonDestination>(new[] { 1, 2, 3 }));
+        var exception = Assert.Throws<InvalidOperationException>(() => mapper.Convert<PersonDestination>(_oneTwoThree));
 
         Assert.Equal("Incompatible mapping from IEnumerable to non-IEnumerable types.", exception.Message);
     }
@@ -175,7 +178,7 @@ public class MapperBaseTests
     {
         var mapper = new TestMapper();
 
-        var exception = Assert.Throws<InvalidOperationException>(() => mapper.Convert<UnsupportedEnumerable<long>>(new[] { 1, 2, 3 }));
+        var exception = Assert.Throws<InvalidOperationException>(() => mapper.Convert<UnsupportedEnumerable<long>>(_oneTwoThree));
 
         Assert.Equal("Cannot create instance of custom enumerable that doesn't implement IList.", exception.Message);
     }
@@ -190,7 +193,7 @@ public class MapperBaseTests
 
     private sealed class CircularNodeMapper : MapperBase, IMap<CircularNodeSource, CircularNodeDestination>
     {
-        private readonly Dictionary<CircularNodeSource, CircularNodeDestination> mappedNodes = [];
+        private readonly Dictionary<CircularNodeSource, CircularNodeDestination> _mappedNodes = [];
 
         public CircularNodeMapper()
             : base()
@@ -199,7 +202,7 @@ public class MapperBaseTests
 
         public CircularNodeDestination Map(CircularNodeSource from)
         {
-            if (mappedNodes.TryGetValue(from, out var existing))
+            if (_mappedNodes.TryGetValue(from, out var existing))
             {
                 return existing;
             }
@@ -209,7 +212,7 @@ public class MapperBaseTests
                 Name = from.Name,
             };
 
-            mappedNodes[from] = result;
+            _mappedNodes[from] = result;
             result.Parent = from.Parent == null ? null : Map(from.Parent);
             result.Child = from.Child == null ? null : Map(from.Child);
 
