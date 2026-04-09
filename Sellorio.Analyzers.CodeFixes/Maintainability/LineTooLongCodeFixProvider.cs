@@ -152,6 +152,11 @@ namespace Sellorio.Analyzers.CodeFixes.Maintainability
         {
             rewrittenLines = null;
 
+            if (!IsSpanContainedInLine(rightSide.Span, line))
+            {
+                return false;
+            }
+
             var indentation = GetLeadingWhitespace(originalLine);
             var continuationIndent = indentation + GetIndentUnit(indentation);
             var prefixLength = equalsToken.Span.End - line.Span.Start;
@@ -188,6 +193,11 @@ namespace Sellorio.Analyzers.CodeFixes.Maintainability
                 return false;
             }
 
+            if (!IsSpanContainedInLine(statement.Expression.Span, line))
+            {
+                return false;
+            }
+
             if (!TryFormatExpression(statement.Expression, semanticModel, GetLeadingWhitespace(originalLine), cancellationToken, out rewrittenLines)
                 || rewrittenLines.Count <= 1)
             {
@@ -210,6 +220,11 @@ namespace Sellorio.Analyzers.CodeFixes.Maintainability
             var token = root.FindToken(position);
             var ifStatement = token.Parent?.AncestorsAndSelf().OfType<IfStatementSyntax>().FirstOrDefault();
             if (ifStatement == null)
+            {
+                return false;
+            }
+
+            if (!IsSpanContainedInLine(ifStatement.Condition.Span, line))
             {
                 return false;
             }
@@ -244,6 +259,11 @@ namespace Sellorio.Analyzers.CodeFixes.Maintainability
             var token = root.FindToken(position);
             var returnStatement = token.Parent?.AncestorsAndSelf().OfType<ReturnStatementSyntax>().FirstOrDefault();
             if (returnStatement?.Expression == null)
+            {
+                return false;
+            }
+
+            if (!IsSpanContainedInLine(returnStatement.Expression.Span, line))
             {
                 return false;
             }
@@ -590,6 +610,11 @@ namespace Sellorio.Analyzers.CodeFixes.Maintainability
         {
             var lineBreakSpan = TextSpan.FromBounds(line.Span.End, line.SpanIncludingLineBreak.End);
             return lineBreakSpan.Length == 0 ? Environment.NewLine : text.ToString(lineBreakSpan);
+        }
+
+        private static bool IsSpanContainedInLine(TextSpan span, TextLine line)
+        {
+            return span.Start >= line.Span.Start && span.End <= line.Span.End;
         }
     }
 }

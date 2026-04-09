@@ -1758,3 +1758,7 @@ dotnet_diagnostic.RCS1266.severity = warning
 # Use string interpolation instead of 'string.Concat'
 # https://josefpihrt.github.io/docs/roslynator/analyzers/RCS1267
 dotnet_diagnostic.RCS1267.severity = warning
+
+[**/Migrations/*.cs]
+generated_code = true
+dotnet_analyzer_diagnostic.severity = none

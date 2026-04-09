@@ -399,6 +399,27 @@ class C
     }
 
     [Fact]
+    public async Task NoCodeFix_WhenReturnExpressionAlreadySpansMultipleLines()
+    {
+        var identifier = new string('x', 170);
+        var source = $@"
+class C
+{{
+    string M(string {identifier}, string other)
+    {{
+        string Combine(string a, string b) => a + b;
+
+        return
+            Combine(
+                {identifier},
+                other);
+    }}
+}}";
+
+        await VerifyNoCodeFixAsync(source);
+    }
+
+    [Fact]
     public async Task NoCodeFix_WhenLineCannotBeSplitBelowLimit()
     {
         var identifier = new string('x', 170);
