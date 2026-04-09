@@ -7,7 +7,7 @@ using Sellorio.Results.Messages;
 
 namespace Sellorio.Extensions.AspNetCore;
 
-internal static class ExtensionsForControllers
+public static class ExtensionsForControllers
 {
     public static IActionResult ToActionResult(
         this IResult result,
