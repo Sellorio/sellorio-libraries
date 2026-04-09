@@ -95,4 +95,49 @@ public class TestClass
 
         await VerifyCS.VerifyAnalyzerAsync(source);
     }
+
+    [Fact]
+    public async Task NoDiagnostic_WhenIfStatementContainsQuestionAndColonTokens()
+    {
+        var source = @"
+public class TestClass
+{
+    public int GetValue(bool condition)
+    {
+        if (condition)
+        {
+            int? value = null;
+
+            switch (value)
+            {
+                case null:
+                    return 0;
+            }
+        }
+
+        return 1;
+    }
+}";
+
+        await VerifyCS.VerifyAnalyzerAsync(source);
+    }
+
+    [Fact]
+    public async Task NoDiagnostic_WhenNestedTernariesAlreadyUseExpectedLineBreaks()
+    {
+        var source = @"
+public class TestClass
+{
+    public string GetText(bool outerCondition, bool innerCondition, string first, string second, string third)
+    {
+        return outerCondition
+            ? innerCondition
+                ? first
+                : second
+            : third;
+    }
+}";
+
+        await VerifyCS.VerifyAnalyzerAsync(source);
+    }
 }

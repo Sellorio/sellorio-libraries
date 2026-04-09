@@ -1,9 +1,9 @@
 ﻿using System;
-using System.Linq;
 using System.Linq.Expressions;
 using Sellorio.Analyzers.CodeAnalysis.Extensions;
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp;
+using Microsoft.CodeAnalysis.CSharp.Syntax;
 using Microsoft.CodeAnalysis.Diagnostics;
 
 namespace Sellorio.Analyzers.CodeAnalysis.Style
@@ -15,45 +15,38 @@ namespace Sellorio.Analyzers.CodeAnalysis.Style
 
         protected override void RegisterActions(AnalysisContext context)
         {
-            context.RegisterOperationAction(
-                operationContext =>
-                {
-                    var ternaryOperation = (Microsoft.CodeAnalysis.Operations.IConditionalOperation)operationContext.Operation;
-                    var syntax = ternaryOperation.Syntax;
-                    var text = syntax.SyntaxTree.GetText(operationContext.CancellationToken);
-                    var questionToken = syntax.DescendantTokens().FirstOrDefault(t => t.IsKind(SyntaxKind.QuestionToken));
-                    var colonToken = syntax.DescendantTokens().FirstOrDefault(t => t.IsKind(SyntaxKind.ColonToken));
+            context.RegisterSyntaxNodeAction(AnalyzeConditionalExpression, SyntaxKind.ConditionalExpression);
+        }
 
-                    // Is ternary
-                    if (questionToken != default && colonToken != default)
-                    {
-                        var startLine = text.Lines.GetLineFromPosition(syntax.SpanStart);
-                        var endLine = text.Lines.GetLineFromPosition(syntax.Span.End);
+        private void AnalyzeConditionalExpression(SyntaxNodeAnalysisContext context)
+        {
+            var syntax = (ConditionalExpressionSyntax)context.Node;
+            var text = syntax.SyntaxTree.GetText(context.CancellationToken);
+            var questionToken = syntax.QuestionToken;
+            var colonToken = syntax.ColonToken;
 
-                        // Is across multiple lines
-                        if (startLine != endLine)
-                        {
-                            var startIndentationWidth = startLine.GetIndentationWidth();
+            var startLine = text.Lines.GetLineFromPosition(syntax.SpanStart);
+            var endLine = text.Lines.GetLineFromPosition(syntax.Span.End);
 
-                            var questionLine = text.Lines.GetLineFromPosition(questionToken.SpanStart);
-                            var colonLine = text.Lines.GetLineFromPosition(colonToken.SpanStart);
+            if (startLine.LineNumber == endLine.LineNumber)
+            {
+                return;
+            }
 
-                            if (questionLine == startLine ||
-                                questionLine.Start != questionToken.LeadingTrivia.Span.Start ||
-                                questionLine.GetIndentationWidth() != startIndentationWidth + 4 ||
-                                colonLine == questionLine ||
-                                colonLine.Start != colonToken.LeadingTrivia.Span.Start ||
-                                colonLine.GetIndentationWidth() != startIndentationWidth + 4)
-                            {
-                                operationContext.ReportDiagnostic(
-                                    Diagnostic.Create(DiagnosticDescriptor, Location.Create(syntax.SyntaxTree, syntax.Span)));
+            var startIndentationWidth = startLine.GetIndentationWidth();
 
-                                return;
-                            }
-                        }
-                    }
-                },
-                OperationKind.Conditional);
+            var questionLine = text.Lines.GetLineFromPosition(questionToken.SpanStart);
+            var colonLine = text.Lines.GetLineFromPosition(colonToken.SpanStart);
+
+            if (questionLine.LineNumber == startLine.LineNumber ||
+                questionLine.Start != questionToken.LeadingTrivia.Span.Start ||
+                questionLine.GetIndentationWidth() != startIndentationWidth + 4 ||
+                colonLine.LineNumber == questionLine.LineNumber ||
+                colonLine.Start != colonToken.LeadingTrivia.Span.Start ||
+                colonLine.GetIndentationWidth() != startIndentationWidth + 4)
+            {
+                context.ReportDiagnostic(Diagnostic.Create(DiagnosticDescriptor, syntax.GetLocation()));
+            }
         }
     }
 }
