@@ -68,9 +68,69 @@ internal class RestClient(HttpClient httpClient, IRestClientAuthorizationProvide
         return ExecuteRequestAsync(url, HttpMethod.Delete);
     }
 
-    private async Task<HttpResponseMessage> ExecuteRequestAsync(FormattableString url, HttpMethod method, object? body = null)
+    public Task<HttpResponseMessage> Get(string url)
+    {
+        return ExecuteRequestAsync(url, HttpMethod.Get);
+    }
+
+    public Task<HttpResponseMessage> Post(string url)
+    {
+        return ExecuteRequestAsync(url, HttpMethod.Post);
+    }
+
+    public Task<HttpResponseMessage> Post(string url, object body)
+    {
+        return ExecuteRequestAsync(url, HttpMethod.Post, body);
+    }
+
+    public Task<HttpResponseMessage> Post(string url, Stream body)
+    {
+        return ExecuteRequestAsync(url, HttpMethod.Post, body);
+    }
+
+    public Task<HttpResponseMessage> Put(string url)
+    {
+        return ExecuteRequestAsync(url, HttpMethod.Put);
+    }
+
+    public Task<HttpResponseMessage> Put(string url, object body)
+    {
+        return ExecuteRequestAsync(url, HttpMethod.Put, body);
+    }
+
+    public Task<HttpResponseMessage> Put(string url, Stream body)
+    {
+        return ExecuteRequestAsync(url, HttpMethod.Put, body);
+    }
+
+    public Task<HttpResponseMessage> Patch(string url)
+    {
+        return ExecuteRequestAsync(url, HttpMethod.Patch);
+    }
+
+    public Task<HttpResponseMessage> Patch(string url, object body)
+    {
+        return ExecuteRequestAsync(url, HttpMethod.Patch, body);
+    }
+
+    public Task<HttpResponseMessage> Patch(string url, Stream body)
+    {
+        return ExecuteRequestAsync(url, HttpMethod.Patch, body);
+    }
+
+    public Task<HttpResponseMessage> Delete(string url)
+    {
+        return ExecuteRequestAsync(url, HttpMethod.Delete);
+    }
+
+    private Task<HttpResponseMessage> ExecuteRequestAsync(FormattableString url, HttpMethod method, object? body = null)
     {
         var uri = ParseUri(url);
+        return ExecuteRequestAsync(uri.ToString(), method, body);
+    }
+
+    private async Task<HttpResponseMessage> ExecuteRequestAsync(string uri, HttpMethod method, object? body = null)
+    {
         using var request = new HttpRequestMessage(method, uri);
 
         if (body != null)
