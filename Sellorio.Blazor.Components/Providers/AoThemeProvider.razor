@@ -1,27 +1,54 @@
-﻿<MudThemeProvider Theme="theme" />
+﻿<MudThemeProvider Theme="_theme" />
 
 @code {
-	readonly MudTheme theme = new()
+	private MudTheme? _theme;
+
+	[Parameter]
+	public string LightPrimary { get; set; } = "#224678";
+
+	[Parameter]
+	public string LightSecondary { get; set; } = "#a174db";
+
+	[Parameter]
+	public string DarkPrimary { get; set; } = "#3976cc";
+
+	[Parameter]
+	public string DarkSecondary { get; set; } = "#412f59";
+
+	protected override void OnInitialized()
 	{
-		Typography = new()
+		_theme = new()
 		{
-			H1 = new H1Typography
+			PaletteLight = new PaletteLight
 			{
-				FontSize = "2.5rem"
+				Primary = LightPrimary,
+				Secondary = LightSecondary
 			},
-			H2 = new H2Typography
+			PaletteDark = new PaletteDark
 			{
-				FontSize = "2.0rem"
+				Primary = DarkPrimary,
+				Secondary = DarkSecondary
 			},
-			H3 = new H3Typography
+			Typography = new()
 			{
-				FontSize = "1.7rem"
-			},
-			H4 = new H4Typography
-			{
-				FontSize = "1.3rem",
-				FontWeight = "bold"
+				H1 = new H1Typography
+				{
+					FontSize = "2.5rem"
+				},
+				H2 = new H2Typography
+				{
+					FontSize = "2.0rem"
+				},
+				H3 = new H3Typography
+				{
+					FontSize = "1.7rem"
+				},
+				H4 = new H4Typography
+				{
+					FontSize = "1.3rem",
+					FontWeight = "bold"
+				}
 			}
-		}
-	};
+		};
+	}
 }
