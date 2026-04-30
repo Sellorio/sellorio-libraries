@@ -7,129 +7,138 @@ using System.Net.Http;
 using System.Net.Mime;
 using System.Text;
 using System.Text.Json;
+using System.Threading;
 using System.Threading.Tasks;
+using Sellorio.Clients.Rest.Authentication;
 
 namespace Sellorio.Clients.Rest;
 
-internal class RestClient(HttpClient httpClient, IRestClientAuthorizationProvider authorizationProvider, JsonSerializerOptions jsonSerializerOptions) : IRestClient
+internal class RestClient(
+    HttpClient httpClient,
+    AuthenticationHandler authenticationHandler,
+    JsonSerializerOptions jsonSerializerOptions) : IRestClient
 {
-    public Task<HttpResponseMessage> Get(FormattableString url)
+    public Task<HttpResponseMessage> Get(FormattableString url, CancellationToken cancellationToken = default)
     {
-        return ExecuteRequestAsync(url, HttpMethod.Get);
+        return ExecuteRequestAsync(url, HttpMethod.Get, null, cancellationToken);
     }
 
-    public Task<HttpResponseMessage> Post(FormattableString url)
+    public Task<HttpResponseMessage> Post(FormattableString url, CancellationToken cancellationToken = default)
     {
-        return ExecuteRequestAsync(url, HttpMethod.Post);
+        return ExecuteRequestAsync(url, HttpMethod.Post, null, cancellationToken);
     }
 
-    public Task<HttpResponseMessage> Post(FormattableString url, object body)
+    public Task<HttpResponseMessage> Post(FormattableString url, object body, CancellationToken cancellationToken = default)
     {
-        return ExecuteRequestAsync(url, HttpMethod.Post, body);
+        return ExecuteRequestAsync(url, HttpMethod.Post, body, cancellationToken);
     }
 
-    public Task<HttpResponseMessage> Post(FormattableString url, Stream body)
+    public Task<HttpResponseMessage> Post(FormattableString url, Stream body, CancellationToken cancellationToken = default)
     {
-        return ExecuteRequestAsync(url, HttpMethod.Post, body);
+        return ExecuteRequestAsync(url, HttpMethod.Post, body, cancellationToken);
     }
 
-    public Task<HttpResponseMessage> Put(FormattableString url)
+    public Task<HttpResponseMessage> Put(FormattableString url, CancellationToken cancellationToken = default)
     {
-        return ExecuteRequestAsync(url, HttpMethod.Put);
+        return ExecuteRequestAsync(url, HttpMethod.Put, null, cancellationToken);
     }
 
-    public Task<HttpResponseMessage> Put(FormattableString url, object body)
+    public Task<HttpResponseMessage> Put(FormattableString url, object body, CancellationToken cancellationToken = default)
     {
-        return ExecuteRequestAsync(url, HttpMethod.Put, body);
+        return ExecuteRequestAsync(url, HttpMethod.Put, body, cancellationToken);
     }
 
-    public Task<HttpResponseMessage> Put(FormattableString url, Stream body)
+    public Task<HttpResponseMessage> Put(FormattableString url, Stream body, CancellationToken cancellationToken = default)
     {
-        return ExecuteRequestAsync(url, HttpMethod.Put, body);
+        return ExecuteRequestAsync(url, HttpMethod.Put, body, cancellationToken);
     }
 
-    public Task<HttpResponseMessage> Patch(FormattableString url)
+    public Task<HttpResponseMessage> Patch(FormattableString url, CancellationToken cancellationToken = default)
     {
-        return ExecuteRequestAsync(url, HttpMethod.Patch);
+        return ExecuteRequestAsync(url, HttpMethod.Patch, null, cancellationToken);
     }
 
-    public Task<HttpResponseMessage> Patch(FormattableString url, object body)
+    public Task<HttpResponseMessage> Patch(FormattableString url, object body, CancellationToken cancellationToken = default)
     {
-        return ExecuteRequestAsync(url, HttpMethod.Patch, body);
+        return ExecuteRequestAsync(url, HttpMethod.Patch, body, cancellationToken);
     }
 
-    public Task<HttpResponseMessage> Patch(FormattableString url, Stream body)
+    public Task<HttpResponseMessage> Patch(FormattableString url, Stream body, CancellationToken cancellationToken = default)
     {
-        return ExecuteRequestAsync(url, HttpMethod.Patch, body);
+        return ExecuteRequestAsync(url, HttpMethod.Patch, body, cancellationToken);
     }
 
-    public Task<HttpResponseMessage> Delete(FormattableString url)
+    public Task<HttpResponseMessage> Delete(FormattableString url, CancellationToken cancellationToken = default)
     {
-        return ExecuteRequestAsync(url, HttpMethod.Delete);
+        return ExecuteRequestAsync(url, HttpMethod.Delete, null, cancellationToken);
     }
 
-    public Task<HttpResponseMessage> Get(string url)
+    public Task<HttpResponseMessage> Get(string url, CancellationToken cancellationToken = default)
     {
-        return ExecuteRequestAsync(url, HttpMethod.Get);
+        return ExecuteRequestAsync(url, HttpMethod.Get, null, cancellationToken);
     }
 
-    public Task<HttpResponseMessage> Post(string url)
+    public Task<HttpResponseMessage> Post(string url, CancellationToken cancellationToken = default)
     {
-        return ExecuteRequestAsync(url, HttpMethod.Post);
+        return ExecuteRequestAsync(url, HttpMethod.Post, null, cancellationToken);
     }
 
-    public Task<HttpResponseMessage> Post(string url, object body)
+    public Task<HttpResponseMessage> Post(string url, object body, CancellationToken cancellationToken = default)
     {
-        return ExecuteRequestAsync(url, HttpMethod.Post, body);
+        return ExecuteRequestAsync(url, HttpMethod.Post, body, cancellationToken);
     }
 
-    public Task<HttpResponseMessage> Post(string url, Stream body)
+    public Task<HttpResponseMessage> Post(string url, Stream body, CancellationToken cancellationToken = default)
     {
-        return ExecuteRequestAsync(url, HttpMethod.Post, body);
+        return ExecuteRequestAsync(url, HttpMethod.Post, body, cancellationToken);
     }
 
-    public Task<HttpResponseMessage> Put(string url)
+    public Task<HttpResponseMessage> Put(string url, CancellationToken cancellationToken = default)
     {
-        return ExecuteRequestAsync(url, HttpMethod.Put);
+        return ExecuteRequestAsync(url, HttpMethod.Put, null, cancellationToken);
     }
 
-    public Task<HttpResponseMessage> Put(string url, object body)
+    public Task<HttpResponseMessage> Put(string url, object body, CancellationToken cancellationToken = default)
     {
-        return ExecuteRequestAsync(url, HttpMethod.Put, body);
+        return ExecuteRequestAsync(url, HttpMethod.Put, body, cancellationToken);
     }
 
-    public Task<HttpResponseMessage> Put(string url, Stream body)
+    public Task<HttpResponseMessage> Put(string url, Stream body, CancellationToken cancellationToken = default)
     {
-        return ExecuteRequestAsync(url, HttpMethod.Put, body);
+        return ExecuteRequestAsync(url, HttpMethod.Put, body, cancellationToken);
     }
 
-    public Task<HttpResponseMessage> Patch(string url)
+    public Task<HttpResponseMessage> Patch(string url, CancellationToken cancellationToken = default)
     {
-        return ExecuteRequestAsync(url, HttpMethod.Patch);
+        return ExecuteRequestAsync(url, HttpMethod.Patch, null, cancellationToken);
     }
 
-    public Task<HttpResponseMessage> Patch(string url, object body)
+    public Task<HttpResponseMessage> Patch(string url, object body, CancellationToken cancellationToken = default)
     {
-        return ExecuteRequestAsync(url, HttpMethod.Patch, body);
+        return ExecuteRequestAsync(url, HttpMethod.Patch, body, cancellationToken);
     }
 
-    public Task<HttpResponseMessage> Patch(string url, Stream body)
+    public Task<HttpResponseMessage> Patch(string url, Stream body, CancellationToken cancellationToken = default)
     {
-        return ExecuteRequestAsync(url, HttpMethod.Patch, body);
+        return ExecuteRequestAsync(url, HttpMethod.Patch, body, cancellationToken);
     }
 
-    public Task<HttpResponseMessage> Delete(string url)
+    public Task<HttpResponseMessage> Delete(string url, CancellationToken cancellationToken = default)
     {
-        return ExecuteRequestAsync(url, HttpMethod.Delete);
+        return ExecuteRequestAsync(url, HttpMethod.Delete, null, cancellationToken);
     }
 
-    private Task<HttpResponseMessage> ExecuteRequestAsync(FormattableString url, HttpMethod method, object? body = null)
+    private Task<HttpResponseMessage> ExecuteRequestAsync(
+        FormattableString url,
+        HttpMethod method,
+        object? body,
+        CancellationToken cancellationToken)
     {
         var uri = ParseUri(url);
-        return ExecuteRequestAsync(uri.ToString(), method, body);
+        return ExecuteRequestAsync(uri.ToString(), method, body, cancellationToken);
     }
 
-    private async Task<HttpResponseMessage> ExecuteRequestAsync(string uri, HttpMethod method, object? body = null)
+    private async Task<HttpResponseMessage> ExecuteRequestAsync(string uri, HttpMethod method, object? body, CancellationToken cancellationToken)
     {
         using var request = new HttpRequestMessage(method, uri);
 
@@ -165,14 +174,8 @@ internal class RestClient(HttpClient httpClient, IRestClientAuthorizationProvide
 
         try
         {
-            var sessionToken = await authorizationProvider.GetAuthorizationHeaderAsync();
-
-            if (sessionToken != null)
-            {
-                request.Headers.Authorization = sessionToken;
-            }
-
-            return await httpClient.SendAsync(request);
+            await authenticationHandler.ConfigureRequestMessageAsync(request, cancellationToken);
+            return await httpClient.SendAsync(request, cancellationToken);
         }
         finally
         {

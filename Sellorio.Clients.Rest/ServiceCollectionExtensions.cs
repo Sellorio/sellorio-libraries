@@ -3,6 +3,8 @@ using System.Linq;
 using System.Net.Http;
 using System.Text.Json;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.DependencyInjection.Extensions;
+using Sellorio.Clients.Rest.Authentication;
 
 namespace Sellorio.Clients.Rest;
 
@@ -25,6 +27,7 @@ public static class ServiceCollectionExtensions
                 : services.AddHttpClient(httpClientName, configureClient);
 
         TryAddRestClient<TInterface, TImplementation>(services, httpClientName, jsonSerializerOptions);
+        services.TryAddScoped<AuthenticationHandler>();
 
         return httpClientBuilder;
     }
@@ -50,9 +53,9 @@ public static class ServiceCollectionExtensions
         services.AddSingleton<TInterface>(svc =>
         {
             var httpClientFactory = svc.GetRequiredService<IHttpClientFactory>();
+            var authenticationHandler = svc.GetRequiredService<AuthenticationHandler>();
             var httpClient = httpClientFactory.CreateClient(httpClientName);
-            var authorizationProvider = svc.GetRequiredService<IRestClientAuthorizationProvider>();
-            var restClient = new RestClient(httpClient, authorizationProvider, jsonOptions ?? Constants.DefaultJsonOptions);
+            var restClient = new RestClient(httpClient, authenticationHandler, jsonOptions ?? Constants.DefaultJsonOptions);
 
             var constructorParameters =
                 constructor.GetParameters()

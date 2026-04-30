@@ -1,16 +1,26 @@
 <Solution>
+  <Folder Name="/(root)/">
+    <File Path=".gitignore" />
+    <File Path="Directory.Build.targets" />
+  </Folder>
   <Folder Name="/.github/" />
   <Folder Name="/.github/workflows/">
     <File Path=".github/workflows/publish-nuget.yml" />
   </Folder>
-  <Folder Name="/Solution Items/">
-    <File Path=".gitignore" />
-    <File Path="Directory.Build.targets" />
+  <Folder Name="/Analyzers/">
+    <Project Path="Sellori.Generators.OpenApiClient/Sellori.Generators.OpenApiClient.csproj" Id="76dfc9ce-53e2-4538-a358-ca2dc98ed7c7" />
+    <Project Path="Sellorio.Analyzers.CodeAnalysis/Sellorio.Analyzers.CodeAnalysis.csproj" Id="eef9fc00-bfe6-4239-a190-d926af48d91b" />
+    <Project Path="Sellorio.Analyzers.CodeFixes/Sellorio.Analyzers.CodeFixes.csproj" Id="fa74658d-0502-46df-a0cb-00b2b319578a" />
+    <Project Path="Sellorio.Analyzers.Tests/Sellorio.Analyzers.Tests.csproj" Id="3d78b32a-1a70-44be-be0a-36089d00bfe6" />
+    <Project Path="Sellorio.Analyzers/Sellorio.Analyzers.csproj" Id="1f4df588-fd18-4bac-9ee6-d399a6258849" />
   </Folder>
-  <Project Path="Sellorio.Analyzers.CodeAnalysis/Sellorio.Analyzers.CodeAnalysis.csproj" Id="eef9fc00-bfe6-4239-a190-d926af48d91b" />
-  <Project Path="Sellorio.Analyzers.CodeFixes/Sellorio.Analyzers.CodeFixes.csproj" Id="fa74658d-0502-46df-a0cb-00b2b319578a" />
-  <Project Path="Sellorio.Analyzers.Tests/Sellorio.Analyzers.Tests.csproj" Id="3d78b32a-1a70-44be-be0a-36089d00bfe6" />
-  <Project Path="Sellorio.Analyzers/Sellorio.Analyzers.csproj" Id="1f4df588-fd18-4bac-9ee6-d399a6258849" />
+  <Folder Name="/Identity/">
+    <Project Path="Sellorio.Identity.AspNetCore/Sellorio.Identity.AspNetCore.csproj" Id="667f9f51-a39c-4b20-8856-54981c29419e" />
+    <Project Path="Sellorio.Identity.Blazor.Client/Sellorio.Identity.Blazor.Client.csproj" Id="9991faf2-56d1-4fdc-ba8b-60be34c5c743" />
+    <Project Path="Sellorio.Identity.Blazor.Server/Sellorio.Identity.Blazor.Server.csproj" Id="ac480b45-b14e-4bd6-bb1e-d9c70765a71a" />
+    <Project Path="Sellorio.Identity.Data/Sellorio.Identity.Data.csproj" Id="10524706-d36f-4458-a9ce-32fa2aef97ea" />
+    <Project Path="Sellorio.Identity.Services/Sellorio.Identity.Services.csproj" Id="450bf2bf-8350-4718-9722-c69f840ef7cb" />
+  </Folder>
   <Project Path="Sellorio.AutoMapping.Tests/Sellorio.AutoMapping.Tests.csproj" Id="1533871e-8a36-4494-ad55-18f83d1265eb" />
   <Project Path="Sellorio.AutoMapping/Sellorio.AutoMapping.csproj" Id="7aa1dd8f-843c-4619-b55c-2dd9eab00bf8" />
   <Project Path="Sellorio.Blazor.Components/Sellorio.Blazor.Components.csproj" Id="6fa3a916-d182-46e9-b137-a21cf2c40b95" />
