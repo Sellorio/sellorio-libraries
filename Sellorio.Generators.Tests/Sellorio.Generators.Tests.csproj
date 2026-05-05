@@ -1,0 +1,37 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>net10.0</TargetFramework>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+    <IsTestProject>true</IsTestProject>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\Sellorio.Generators.OpenApiClient\Sellorio.Generators.OpenApiClient.csproj" ReferenceOutputAssembly="false" />
+    <ProjectReference Include="..\Sellorio.Generators.OpenApiCommon\Sellorio.Generators.OpenApiCommon.csproj" />
+  </ItemGroup>
+
+  <Target Name="AddOpenApiClientAnalyzers" BeforeTargets="CoreCompile">
+    <ItemGroup>
+      <Analyzer Include="..\Sellorio.Generators.OpenApiClient\bin\$(Configuration)\netstandard2.0\*.dll" />
+    </ItemGroup>
+  </Target>
+
+  <ItemGroup>
+    <PackageReference Include="Microsoft.NET.Test.Sdk" Version="18.5.1" />
+    <PackageReference Include="xunit" Version="2.9.3" />
+    <PackageReference Include="xunit.runner.visualstudio" Version="3.1.5">
+      <PrivateAssets>all</PrivateAssets>
+      <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+    </PackageReference>
+  </ItemGroup>
+
+  <ItemGroup>
+    <AdditionalFiles Include="Definition\*.yaml" />
+    <Content Include="Definition\*.yaml">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+  </ItemGroup>
+
+</Project>

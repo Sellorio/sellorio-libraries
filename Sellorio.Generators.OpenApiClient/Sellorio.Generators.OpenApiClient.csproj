@@ -5,9 +5,8 @@
 		<IsPackable>true</IsPackable>
 		<IncludeBuildOutput>false</IncludeBuildOutput>
 		<NoPackageAnalysis>true</NoPackageAnalysis>
-
-		<PackageId>Sellorio.Generators.OpenApiClient</PackageId>
-		<EnforceExtendedAnalyzerRules>false</EnforceExtendedAnalyzerRules>
+		<EnforceExtendedAnalyzerRules>true</EnforceExtendedAnalyzerRules>
+		<DisableProjectReferencePackageConversion>true</DisableProjectReferencePackageConversion>
 	</PropertyGroup>
 
 	<ItemGroup>
@@ -16,12 +15,18 @@
 			<IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
 		</PackageReference>
 		<PackageReference Include="Microsoft.CodeAnalysis.CSharp" Version="5.0.0" />
+        <PackageReference Include="YamlDotNet" Version="17.1.0" />
 	</ItemGroup>
 
 	<ItemGroup>
 		<None Include="bin\$(Configuration)\netstandard2.0\Sellorio.Generators.OpenApiClient.dll" Pack="true" PackagePath="analyzers/dotnet/cs" Visible="false" />
 		<None Include="bin\$(Configuration)\netstandard2.0\Sellorio.Generators.OpenApiClient.pdb" Pack="true" PackagePath="analyzers/dotnet/cs" Visible="false" Condition="Exists('bin\$(Configuration)\netstandard2.0\Sellorio.Generators.OpenApiClient.pdb')" />
 		<None Include="bin\$(Configuration)\netstandard2.0\Sellorio.Generators.OpenApiClient.xml" Pack="true" PackagePath="analyzers/dotnet/cs" Visible="false" Condition="Exists('bin\$(Configuration)\netstandard2.0\Sellorio.Generators.OpenApiClient.xml')" />
+	</ItemGroup>
+
+	<ItemGroup>
+	  <ProjectReference Include="..\Sellorio.Generators.CSharpCommon\Sellorio.Generators.CSharpCommon.csproj" IncludeAssets="all" PrivateAssets="none" />
+	  <ProjectReference Include="..\Sellorio.Generators.OpenApiCommon\Sellorio.Generators.OpenApiCommon.csproj" IncludeAssets="all" PrivateAssets="none" />
 	</ItemGroup>
 
 </Project>

@@ -1,0 +1,47 @@
+openapi: 3.0.3
+info:
+  title: OpenApiClient Response Test API
+  version: 1.0.0
+paths:
+  /reports/{reportId}:
+    get:
+      operationId: getReport
+      parameters:
+        - name: reportId
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: report
+          content:
+            application/json:
+              schema:
+                type: integer
+  /reports/empty:
+    get:
+      operationId: getEmptyReport
+      responses:
+        '200':
+          description: empty report
+          content:
+            application/json:
+              schema:
+                type: object
+  /reports/default:
+    get:
+      operationId: getDefaultReport
+      responses:
+        default:
+          description: default report
+          content:
+            application/json:
+              schema:
+                type: string
+  /reports/plain:
+    get:
+      operationId: getPlainReport
+      responses:
+        '204':
+          description: no content

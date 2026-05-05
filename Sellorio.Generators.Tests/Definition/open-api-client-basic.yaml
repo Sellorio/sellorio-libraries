@@ -1,0 +1,91 @@
+openapi: 3.0.3
+info:
+  title: OpenApiClient Basic Test API
+  version: 1.0.0
+paths:
+  /widgets/{widgetId}:
+    get:
+      operationId: getWidget
+      tags:
+        - widgets
+      parameters:
+        - name: widgetId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+        - name: includeDetails
+          in: query
+          schema:
+            type: boolean
+        - name: X-Correlation-ID
+          in: header
+          schema:
+            type: string
+      responses:
+        '200':
+          description: widget
+          content:
+            application/json:
+              schema:
+                type: object
+  /widgets/search:
+    get:
+      operationId: searchWidgets
+      tags:
+        - widgets
+      parameters:
+        - name: createdAfter
+          in: query
+          schema:
+            type: string
+            format: date-time
+        - name: score
+          in: query
+          schema:
+            type: number
+        - name: X-Request-ID
+          in: header
+          required: true
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: search result
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  type: string
+  /widgets:
+    post:
+      operationId: createWidget
+      tags:
+        - widgets
+      requestBody:
+        required: true
+        description: Widget payload
+        x-parameter-name: widgetPayload
+        content:
+          application/json:
+            schema:
+              type: array
+              items:
+                type: string
+      responses:
+        '204':
+          description: created
+  /admin/reports:
+    get:
+      operationId: getAdminReport
+      tags:
+        - admin
+      responses:
+        '200':
+          description: report
+          content:
+            application/json:
+              schema:
+                type: object

@@ -8,11 +8,14 @@
     <File Path=".github/workflows/publish-nuget.yml" />
   </Folder>
   <Folder Name="/Analyzers/">
-    <Project Path="Sellori.Generators.OpenApiClient/Sellori.Generators.OpenApiClient.csproj" Id="76dfc9ce-53e2-4538-a358-ca2dc98ed7c7" />
     <Project Path="Sellorio.Analyzers.CodeAnalysis/Sellorio.Analyzers.CodeAnalysis.csproj" Id="eef9fc00-bfe6-4239-a190-d926af48d91b" />
     <Project Path="Sellorio.Analyzers.CodeFixes/Sellorio.Analyzers.CodeFixes.csproj" Id="fa74658d-0502-46df-a0cb-00b2b319578a" />
     <Project Path="Sellorio.Analyzers.Tests/Sellorio.Analyzers.Tests.csproj" Id="3d78b32a-1a70-44be-be0a-36089d00bfe6" />
     <Project Path="Sellorio.Analyzers/Sellorio.Analyzers.csproj" Id="1f4df588-fd18-4bac-9ee6-d399a6258849" />
+    <Project Path="Sellorio.Generators.CSharpCommon/Sellorio.Generators.CSharpCommon.csproj" Id="fe47c957-9958-4b26-8993-f8aea105cd13" />
+    <Project Path="Sellorio.Generators.OpenApiClient/Sellorio.Generators.OpenApiClient.csproj" Id="32c7b573-b932-4c53-abd1-673158714d28" />
+    <Project Path="Sellorio.Generators.OpenApiCommon/Sellorio.Generators.OpenApiCommon.csproj" Id="95c2cf92-2adf-4d7c-9add-5e3b3848ac9d" />
+    <Project Path="Sellorio.Generators.Tests/Sellorio.Generators.Tests.csproj" Id="aeb2aa20-d228-4f7d-a7e4-465c02e3bb54" />
   </Folder>
   <Folder Name="/Identity/">
     <Project Path="Sellorio.Identity.AspNetCore/Sellorio.Identity.AspNetCore.csproj" Id="667f9f51-a39c-4b20-8856-54981c29419e" />
