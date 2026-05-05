@@ -30,6 +30,16 @@ paths:
             application/json:
               schema:
                 type: object
+                required:
+                  - id
+                  - name
+                properties:
+                  id:
+                    type: integer
+                  name:
+                    type: string
+        '404':
+          description: widget not found
   /widgets/search:
     get:
       operationId: searchWidgets
@@ -77,6 +87,53 @@ paths:
       responses:
         '204':
           description: created
+        '400':
+          description: validation error
+          content:
+            application/json:
+              schema:
+                type: object
+  /widgets/model:
+    post:
+      operationId: createWidgetModel
+      tags:
+        - widgets
+      requestBody:
+        required: true
+        description: Widget model payload
+        x-parameter-name: widgetModel
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - name
+              properties:
+                name:
+                  type: string
+                quantity:
+                  type: integer
+      responses:
+        '200':
+          description: created widget model
+          content:
+            application/json:
+              schema:
+                type: object
+                required:
+                  - id
+                  - name
+                properties:
+                  id:
+                    type: integer
+                  name:
+                    type: string
+        '400':
+          description: validation error
+          content:
+            application/json:
+              schema:
+                type: object
   /admin/reports:
     get:
       operationId: getAdminReport
@@ -89,3 +146,8 @@ paths:
             application/json:
               schema:
                 type: object
+                required:
+                  - title
+                properties:
+                  title:
+                    type: string

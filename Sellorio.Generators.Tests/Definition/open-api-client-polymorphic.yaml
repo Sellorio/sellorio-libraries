@@ -1,0 +1,31 @@
+openapi: 3.0.3
+info:
+  title: OpenApiClient Polymorphic Response Test API
+  version: 1.0.0
+paths:
+  /reports/polymorphic:
+    get:
+      operationId: getPolymorphicReport
+      responses:
+        '200':
+          description: object response
+          content:
+            application/json:
+              schema:
+                type: object
+                required:
+                  - id
+                  - name
+                properties:
+                  id:
+                    type: integer
+                  name:
+                    type: string
+        '201':
+          description: list response
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  type: string

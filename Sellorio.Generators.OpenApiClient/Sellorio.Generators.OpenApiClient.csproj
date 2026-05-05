@@ -25,7 +25,7 @@
 	</ItemGroup>
 
 	<ItemGroup>
-	  <ProjectReference Include="..\Sellorio.Generators.CSharpCommon\Sellorio.Generators.CSharpCommon.csproj" IncludeAssets="all" PrivateAssets="none" />
+     <ProjectReference Include="..\Sellorio.Generators.CSharpCommon\Sellorio.Generators.CSharpCommon.csproj" IncludeAssets="all" PrivateAssets="none" />
 	  <ProjectReference Include="..\Sellorio.Generators.OpenApiCommon\Sellorio.Generators.OpenApiCommon.csproj" IncludeAssets="all" PrivateAssets="none" />
 	</ItemGroup>
 

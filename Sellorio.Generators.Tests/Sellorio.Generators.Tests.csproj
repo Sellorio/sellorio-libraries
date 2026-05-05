@@ -10,6 +10,8 @@
   <ItemGroup>
     <ProjectReference Include="..\Sellorio.Generators.OpenApiClient\Sellorio.Generators.OpenApiClient.csproj" ReferenceOutputAssembly="false" />
     <ProjectReference Include="..\Sellorio.Generators.OpenApiCommon\Sellorio.Generators.OpenApiCommon.csproj" />
+    <ProjectReference Include="..\Sellorio.Clients.Rest\Sellorio.Clients.Rest.csproj" />
+    <ProjectReference Include="..\Sellorio.Results\Sellorio.Results.csproj" />
   </ItemGroup>
 
   <Target Name="AddOpenApiClientAnalyzers" BeforeTargets="CoreCompile">

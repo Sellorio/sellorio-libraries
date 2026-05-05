@@ -23,23 +23,24 @@ namespace Sellorio.Generators.OpenApiClient.CodeGeneration
                 throw new ArgumentNullException(nameof(document));
             }
 
-            var operations = GetOperations(document, generationTarget).ToList();
+            var schemaTypeRegistry = new OpenApiClientSchemaTypeRegistry(document, generationTarget.InterfaceAccessibility);
+            var operations = GetOperations(document, generationTarget, schemaTypeRegistry).ToList();
+            var generatedTypesSource = schemaTypeRegistry.GenerateTypeDefinitions();
 
             return new OpenApiClientCodeGenerationResult(
-                GenerateInterfaceSource(generationTarget, operations),
+                GenerateInterfaceSource(generationTarget, operations, generatedTypesSource),
                 generationTarget.GenerateImplementation
                     ? GenerateImplementationSource(generationTarget, operations)
                     : null);
         }
 
-        private static string GenerateInterfaceSource(OpenApiClientGenerationTarget generationTarget, IReadOnlyList<GeneratedOperation> operations)
+        private static string GenerateInterfaceSource(OpenApiClientGenerationTarget generationTarget, IReadOnlyList<GeneratedOperation> operations, string generatedTypesSource)
         {
             var builder = new CSharpSourceBuilder();
 
-            builder.AppendLine("using global::System.Collections.Generic;");
+            builder.AppendLine("#nullable enable");
             builder.AppendLine("using global::System.Threading;");
             builder.AppendLine("using global::System.Threading.Tasks;");
-            builder.AppendLine("using global::System.Text.Json;");
             builder.AppendLine();
 
             if (!string.IsNullOrWhiteSpace(generationTarget.NamespaceName))
@@ -56,6 +57,12 @@ namespace Sellorio.Generators.OpenApiClient.CodeGeneration
                 }
             }
 
+            if (!string.IsNullOrWhiteSpace(generatedTypesSource))
+            {
+                builder.AppendLine();
+                builder.AppendLine(generatedTypesSource.TrimEnd());
+            }
+
             return builder.ToString();
         }
 
@@ -63,15 +70,18 @@ namespace Sellorio.Generators.OpenApiClient.CodeGeneration
         {
             var builder = new CSharpSourceBuilder();
 
+            builder.AppendLine("#nullable enable");
             builder.AppendLine("using global::System;");
             builder.AppendLine("using global::System.Collections.Generic;");
             builder.AppendLine("using global::System.Globalization;");
             builder.AppendLine("using global::System.Linq;");
+            builder.AppendLine("using global::System.Net;");
             builder.AppendLine("using global::System.Net.Http;");
             builder.AppendLine("using global::System.Text;");
             builder.AppendLine("using global::System.Text.Json;");
             builder.AppendLine("using global::System.Threading;");
             builder.AppendLine("using global::System.Threading.Tasks;");
+            builder.AppendLine("using global::Sellorio.Clients.Rest;");
             builder.AppendLine();
 
             if (!string.IsNullOrWhiteSpace(generationTarget.NamespaceName))
@@ -98,42 +108,12 @@ namespace Sellorio.Generators.OpenApiClient.CodeGeneration
                 }
 
                 builder.AppendLine();
-                using (builder.BeginBlock("private static void EnsureSuccessStatusCode(HttpResponseMessage response)"))
+                using (builder.BeginBlock("private static async Task<T> DeserializeSuccessResponseAsync<T>(HttpResponseMessage response)"))
                 {
-                    builder.AppendLine("if (response.IsSuccessStatusCode)");
-                    builder.AppendLine("{");
-                    builder.AppendLine("    return;");
-                    builder.AppendLine("}");
-                    builder.AppendLine();
-                    builder.AppendLine("throw new HttpRequestException($\"Request failed with status code {(int)response.StatusCode}.\", null, response.StatusCode);");
-                }
-
-                builder.AppendLine();
-                using (builder.BeginBlock("private static async Task<JsonElement> ReadJsonElementAsync(HttpResponseMessage response)"))
-                {
-                    builder.AppendLine("var content = await response.Content.ReadAsStringAsync().ConfigureAwait(false);");
-                    builder.AppendLine();
-                    builder.AppendLine("if (string.IsNullOrWhiteSpace(content))");
-                    builder.AppendLine("{");
-                    builder.AppendLine("    return default;");
-                    builder.AppendLine("}");
-                    builder.AppendLine();
-                    builder.AppendLine("using var document = JsonDocument.Parse(content);");
-                    builder.AppendLine("return document.RootElement.Clone();");
-                }
-
-                builder.AppendLine();
-                using (builder.BeginBlock("private static async Task<T> ReadJsonAsync<T>(HttpResponseMessage response)"))
-                {
-                    builder.AppendLine("var content = await response.Content.ReadAsStringAsync().ConfigureAwait(false);");
-                    builder.AppendLine("var value = JsonSerializer.Deserialize<T>(content, SerializerOptions);");
-                    builder.AppendLine();
-                    builder.AppendLine("if (value == null)");
-                    builder.AppendLine("{");
-                    builder.AppendLine("    throw new InvalidOperationException(\"Response body was null.\");");
-                    builder.AppendLine("}");
-                    builder.AppendLine();
-                    builder.AppendLine("return value;");
+                    builder.AppendLine("var result = await Task.FromResult(response).ToValueResult<T>(SerializerOptions).ConfigureAwait(false);");
+                    builder.AppendLine("return result.WasSuccess");
+                    builder.AppendLine("    ? result.Value");
+                    builder.AppendLine("    : throw new InvalidOperationException(\"Expected a successful response body.\");");
                 }
             }
 
@@ -157,20 +137,72 @@ namespace Sellorio.Generators.OpenApiClient.CodeGeneration
                 builder.AppendLine("using var request = new HttpRequestMessage(HttpMethod." + operation.HttpMethodName + ", requestUriBuilder.ToString());");
                 GenerateHeaderAssignments(builder, operation);
                 GenerateRequestBody(builder, operation);
-                builder.AppendLine("using var response = await _httpClient.SendAsync(request, HttpCompletionOption.ResponseHeadersRead, cancellationToken).ConfigureAwait(false);");
-                builder.AppendLine("EnsureSuccessStatusCode(response);");
+                builder.AppendLine("var responseTask = _httpClient.SendAsync(request, HttpCompletionOption.ResponseHeadersRead, cancellationToken);");
 
-                if (operation.ResponseKind == ResponseKind.None)
+                if (operation.ReturnStrategy.Kind == ResultReturnKind.Result)
                 {
-                    builder.AppendLine("return;");
+                    if (operation.ReturnStrategy.ContextTypeName == null)
+                    {
+                        builder.AppendLine("return await responseTask.ToResult(SerializerOptions).ConfigureAwait(false);");
+                    }
+                    else
+                    {
+                        builder.AppendLine("return await responseTask.ToResult<" + operation.ReturnStrategy.ContextTypeName + ">(SerializerOptions).ConfigureAwait(false);");
+                    }
                 }
-                else if (operation.ResponseKind == ResponseKind.JsonElement)
+                else if (operation.ReturnStrategy.SuccessResponses.Count == 1)
                 {
-                    builder.AppendLine("return await ReadJsonElementAsync(response).ConfigureAwait(false);");
+                    if (operation.ReturnStrategy.ContextTypeName == null)
+                    {
+                        builder.AppendLine("return await responseTask.ToValueResult<" + operation.ReturnStrategy.ValueTypeName + ">(SerializerOptions).ConfigureAwait(false);");
+                    }
+                    else
+                    {
+                        builder.AppendLine("return await responseTask.ToValueResult<" + operation.ReturnStrategy.ContextTypeName + ", " + operation.ReturnStrategy.ValueTypeName + ">(SerializerOptions).ConfigureAwait(false);");
+                    }
                 }
                 else
                 {
-                    builder.AppendLine("return await ReadJsonAsync<" + operation.ResponseTypeName + ">(response).ConfigureAwait(false);");
+                    var methodName = operation.ReturnStrategy.ContextTypeName == null
+                        ? "ToValueResult<" + operation.ReturnStrategy.ValueTypeName + ">"
+                        : "ToValueResult<" + operation.ReturnStrategy.ContextTypeName + ", " + operation.ReturnStrategy.ValueTypeName + ">";
+                    builder.AppendLine("return await responseTask." + methodName + "(");
+                    builder.AppendLine("    async response =>");
+                    builder.AppendLine("    {");
+                    builder.AppendLine("        switch (response.StatusCode)");
+                    builder.AppendLine("        {");
+
+                    foreach (var successResponse in operation.ReturnStrategy.SuccessResponses)
+                    {
+                        var caseLabel = GetHttpStatusCodeCaseLabel(successResponse.StatusCode);
+                        if (caseLabel == "default")
+                        {
+                            builder.AppendLine("            default:");
+                        }
+                        else
+                        {
+                            builder.AppendLine("            case " + caseLabel + ":");
+                        }
+
+                        if (successResponse.RequiresWrapping)
+                        {
+                            builder.AppendLine("            {");
+                            builder.AppendLine("                var value = await DeserializeSuccessResponseAsync<" + successResponse.DeserializeTypeName + ">(response).ConfigureAwait(false);");
+                            builder.AppendLine("                return new " + successResponse.ConcreteTypeName + " { Value = value };");
+                            builder.AppendLine("            }");
+                        }
+                        else
+                        {
+                            builder.AppendLine("            {");
+                            builder.AppendLine("                return await DeserializeSuccessResponseAsync<" + successResponse.DeserializeTypeName + ">(response).ConfigureAwait(false);");
+                            builder.AppendLine("            }");
+                        }
+                    }
+
+                    builder.AppendLine("            default:");
+                    builder.AppendLine("                throw new InvalidOperationException($\"Unexpected success status code {(int)response.StatusCode}.\");");
+                    builder.AppendLine("        }");
+                    builder.AppendLine("    }, SerializerOptions).ConfigureAwait(false);");
                 }
             }
         }
@@ -255,7 +287,7 @@ namespace Sellorio.Generators.OpenApiClient.CodeGeneration
             }
         }
 
-        private static IEnumerable<GeneratedOperation> GetOperations(OpenApiDocument document, OpenApiClientGenerationTarget generationTarget)
+        private static IEnumerable<GeneratedOperation> GetOperations(OpenApiDocument document, OpenApiClientGenerationTarget generationTarget, OpenApiClientSchemaTypeRegistry schemaTypeRegistry)
         {
             if (document.Paths == null)
             {
@@ -274,7 +306,7 @@ namespace Sellorio.Generators.OpenApiClient.CodeGeneration
                         continue;
                     }
 
-                    yield return CreateOperation(document, path, pathItem, operation.HttpMethodName, operation.Operation);
+                    yield return CreateOperation(document, path, pathItem, operation.HttpMethodName, operation.Operation, schemaTypeRegistry);
                 }
             }
         }
@@ -332,7 +364,7 @@ namespace Sellorio.Generators.OpenApiClient.CodeGeneration
             return operation.Tags.Any(tag => generationTarget.IncludedTags.Any(includedTag => _tagComparer.Equals(includedTag, tag)));
         }
 
-        private static GeneratedOperation CreateOperation(OpenApiDocument document, string path, OpenApiPathItem pathItem, string httpMethodName, OpenApiOperation operation)
+        private static GeneratedOperation CreateOperation(OpenApiDocument document, string path, OpenApiPathItem pathItem, string httpMethodName, OpenApiOperation operation, OpenApiClientSchemaTypeRegistry schemaTypeRegistry)
         {
             var parameters = new List<GeneratedParameter>();
             var usedNames = new HashSet<string>(StringComparer.Ordinal);
@@ -345,7 +377,7 @@ namespace Sellorio.Generators.OpenApiClient.CodeGeneration
                     continue;
                 }
 
-                parameters.Add(CreateParameter(parameter, usedNames));
+                parameters.Add(CreateParameter(parameter, usedNames, schemaTypeRegistry));
             }
 
             GeneratedParameter bodyParameter = null;
@@ -357,19 +389,16 @@ namespace Sellorio.Generators.OpenApiClient.CodeGeneration
                 var parameterName = requestBody.Extensions.TryGetValue("x-parameter-name", out var extensionValue) && extensionValue is string configuredName && !string.IsNullOrWhiteSpace(configuredName)
                     ? configuredName
                     : "body";
-                var bodyType = GetTypeName(schema, requestBody.Required == true, false, true);
+                var resolvedBodyType = schemaTypeRegistry.ResolveSchemaType(schema, CSharpIdentifier.ToPascalCase(parameterName), requestBody.Required == true);
+                var bodyType = resolvedBodyType.TypeName;
                 var bodyParameterName = GetUniqueName(CSharpIdentifier.ToCamelCase(parameterName), usedNames);
-                bodyParameter = new GeneratedParameter(bodyParameterName, parameterName, bodyType, requestBody.Required != true, ParameterKind.Body, GetSchemaKind(schema));
+                bodyParameter = new GeneratedParameter(bodyParameterName, parameterName, bodyType, requestBody.Required != true, ParameterKind.Body, GetSchemaKind(schema), resolvedBodyType.IsSpecificModel, resolvedBodyType.NonNullableTypeName);
                 parameters.Add(bodyParameter);
             }
 
-            parameters.Add(new GeneratedParameter("cancellationToken", "cancellationToken", "global::System.Threading.CancellationToken", true, ParameterKind.CancellationToken, SchemaKind.Other));
+            parameters.Add(new GeneratedParameter("cancellationToken", "cancellationToken", "global::System.Threading.CancellationToken", true, ParameterKind.CancellationToken, SchemaKind.Other, false, "global::System.Threading.CancellationToken"));
 
-            var response = GetSuccessResponse(document, operation.Responses);
-            var responseContentType = GetPreferredContentType(response?.Content);
-            var responseSchema = response != null && responseContentType != null ? response.Content[responseContentType].Schema : null;
-            var responseKind = GetResponseKind(responseSchema);
-            var responseTypeName = responseKind == ResponseKind.None ? null : GetResponseTypeName(responseSchema);
+            var returnStrategy = CreateReturnStrategy(document, operation, schemaTypeRegistry, bodyParameter);
 
             return new GeneratedOperation(
                 CSharpIdentifier.ToPascalCase(string.IsNullOrWhiteSpace(operation.OperationId) ? httpMethodName + path : operation.OperationId),
@@ -378,9 +407,7 @@ namespace Sellorio.Generators.OpenApiClient.CodeGeneration
                 parameters,
                 bodyParameter,
                 bodyContentType ?? "application/json",
-                responseKind,
-                responseTypeName == null ? "global::System.Threading.Tasks.Task" : "global::System.Threading.Tasks.Task<" + responseTypeName + ">",
-                responseTypeName);
+                returnStrategy);
         }
 
         private static OpenApiParameter ResolveParameter(OpenApiDocument document, OpenApiReferenceOr<OpenApiParameter> parameterReference)
@@ -431,29 +458,6 @@ namespace Sellorio.Generators.OpenApiClient.CodeGeneration
                 : null;
         }
 
-        private static OpenApiResponse GetSuccessResponse(OpenApiDocument document, OpenApiResponses responses)
-        {
-            if (responses == null)
-            {
-                return null;
-            }
-
-            var successResponse = responses.Items
-                .Where(pair => pair.Key.Length == 3 && pair.Key[0] == '2')
-                .OrderBy(pair => pair.Key, StringComparer.Ordinal)
-                .Select(pair => ResolveResponse(document, pair.Value))
-                .FirstOrDefault(response => response != null);
-
-            if (successResponse != null)
-            {
-                return successResponse;
-            }
-
-            return responses.TryGetValue("default", out var defaultResponse)
-                ? ResolveResponse(document, defaultResponse)
-                : null;
-        }
-
         private static OpenApiResponse ResolveResponse(OpenApiDocument document, OpenApiReferenceOr<OpenApiResponse> responseReference)
         {
             if (responseReference == null)
@@ -493,129 +497,131 @@ namespace Sellorio.Generators.OpenApiClient.CodeGeneration
             return content.Keys.First();
         }
 
-        private static GeneratedParameter CreateParameter(OpenApiParameter parameter, HashSet<string> usedNames)
+        private static GeneratedReturnStrategy CreateReturnStrategy(OpenApiDocument document, OpenApiOperation operation, OpenApiClientSchemaTypeRegistry schemaTypeRegistry, GeneratedParameter bodyParameter)
+        {
+            var requestModelContextTypeName = bodyParameter?.NonNullableTypeName;
+            var successResponses = GetSuccessResponses(document, operation.Responses).ToList();
+            var responseModels = successResponses
+                .Select(response =>
+                {
+                    var contentType = GetPreferredContentType(response.Response?.Content);
+                    var schema = contentType == null ? null : response.Response.Content[contentType].Schema;
+                    return new { response.StatusCode, Schema = schema };
+                })
+                .Where(response => response.Schema != null)
+                .ToList();
+
+            if (responseModels.Count == 0)
+            {
+                return requestModelContextTypeName == null
+                    ? GeneratedReturnStrategy.CreateResult("global::System.Threading.Tasks.Task<global::Sellorio.Results.Result>")
+                    : GeneratedReturnStrategy.CreateResult(
+                        "global::System.Threading.Tasks.Task<global::Sellorio.Results.Result<" + requestModelContextTypeName + ">>",
+                        requestModelContextTypeName);
+            }
+
+            if (responseModels.Count == 1)
+            {
+                var responseModel = responseModels[0];
+                var preferredName = CSharpIdentifier.ToPascalCase(string.IsNullOrWhiteSpace(operation.OperationId) ? "Response" : operation.OperationId + "Response");
+                var resolvedType = schemaTypeRegistry.ResolveSchemaType(responseModel.Schema, preferredName, true);
+                var successResponse = new GeneratedSuccessResponse(responseModel.StatusCode, resolvedType.NonNullableTypeName, resolvedType.NonNullableTypeName, false);
+
+                if (requestModelContextTypeName != null)
+                {
+                    return GeneratedReturnStrategy.CreateValueResult(
+                        "global::System.Threading.Tasks.Task<global::Sellorio.Results.ValueResult<" + requestModelContextTypeName + ", " + resolvedType.NonNullableTypeName + ">>",
+                        requestModelContextTypeName,
+                        resolvedType.NonNullableTypeName,
+                        successResponse);
+                }
+
+                return GeneratedReturnStrategy.CreateValueResult(
+                    "global::System.Threading.Tasks.Task<global::Sellorio.Results.ValueResult<" + resolvedType.NonNullableTypeName + ">>",
+                    null,
+                    resolvedType.NonNullableTypeName,
+                    successResponse);
+            }
+
+            var interfaceName = "I" + CSharpIdentifier.ToPascalCase(string.IsNullOrWhiteSpace(operation.OperationId) ? "Response" : operation.OperationId + "Response");
+            var generatedResponses = new List<GeneratedSuccessResponse>();
+
+            foreach (var responseModel in responseModels)
+            {
+                var preferredName = CSharpIdentifier.ToPascalCase(string.IsNullOrWhiteSpace(operation.OperationId)
+                    ? "Response" + responseModel.StatusCode
+                    : operation.OperationId + responseModel.StatusCode + "Response");
+                var successType = schemaTypeRegistry.ResolvePolymorphicSuccessResponseType(responseModel.Schema, preferredName, interfaceName);
+                generatedResponses.Add(new GeneratedSuccessResponse(responseModel.StatusCode, successType.ConcreteTypeName, successType.DeserializeTypeName, successType.RequiresWrapping));
+            }
+
+            return requestModelContextTypeName == null
+                ? GeneratedReturnStrategy.CreateValueResult(
+                    "global::System.Threading.Tasks.Task<global::Sellorio.Results.ValueResult<" + interfaceName + ">>",
+                    null,
+                    interfaceName,
+                    generatedResponses.ToArray())
+                : GeneratedReturnStrategy.CreateValueResult(
+                    "global::System.Threading.Tasks.Task<global::Sellorio.Results.ValueResult<" + requestModelContextTypeName + ", " + interfaceName + ">>",
+                    requestModelContextTypeName,
+                    interfaceName,
+                    generatedResponses.ToArray());
+        }
+
+        private static IEnumerable<(string StatusCode, OpenApiResponse Response)> GetSuccessResponses(OpenApiDocument document, OpenApiResponses responses)
+        {
+            if (responses == null)
+            {
+                yield break;
+            }
+
+            var successResponses = responses.Items
+                .Where(pair => pair.Key.Length == 3 && pair.Key[0] == '2')
+                .OrderBy(pair => pair.Key, StringComparer.Ordinal)
+                .Select(pair => (pair.Key, ResolveResponse(document, pair.Value)))
+                .Where(pair => pair.Item2 != null)
+                .ToList();
+
+            if (successResponses.Count > 0)
+            {
+                foreach (var successResponse in successResponses)
+                {
+                    yield return successResponse;
+                }
+
+                yield break;
+            }
+
+            if (responses.TryGetValue("default", out var defaultResponse))
+            {
+                var resolvedResponse = ResolveResponse(document, defaultResponse);
+                if (resolvedResponse != null)
+                {
+                    yield return ("default", resolvedResponse);
+                }
+            }
+        }
+
+        private static string GetHttpStatusCodeCaseLabel(string statusCode)
+        {
+            return string.Equals(statusCode, "default", StringComparison.Ordinal)
+                ? "default"
+                : "(HttpStatusCode)" + statusCode;
+        }
+
+        private static GeneratedParameter CreateParameter(OpenApiParameter parameter, HashSet<string> usedNames, OpenApiClientSchemaTypeRegistry schemaTypeRegistry)
         {
             var name = GetUniqueName(CSharpIdentifier.ToCamelCase(parameter.Name), usedNames);
+            var resolvedType = schemaTypeRegistry.ResolveSchemaType(parameter.Schema, CSharpIdentifier.ToPascalCase(parameter.Name), parameter.Required == true);
             return new GeneratedParameter(
                 name,
                 parameter.Name,
-                GetTypeName(parameter.Schema, parameter.Required == true, false, false),
+                resolvedType.TypeName,
                 parameter.Required != true,
                 GetParameterKind(parameter.In),
-                GetSchemaKind(parameter.Schema));
-        }
-
-        private static string GetTypeName(OpenApiSchema schema, bool required, bool forResponse, bool forBody)
-        {
-            if (schema == null)
-            {
-                return "string";
-            }
-
-            if (!string.IsNullOrWhiteSpace(schema.Ref))
-            {
-                return forResponse ? "global::System.Text.Json.JsonElement" : GetNullableType("global::System.Text.Json.JsonElement", required, false);
-            }
-
-            if (schema.Type is IList<object> || schema.OneOf.Count > 0 || schema.AnyOf.Count > 0 || schema.AllOf.Count > 0)
-            {
-                return "global::System.Text.Json.JsonElement";
-            }
-
-            var type = schema.Type as string;
-            switch (type)
-            {
-                case "string":
-                    if (string.Equals(schema.Format, "uuid", StringComparison.OrdinalIgnoreCase))
-                    {
-                        return GetNullableType("global::System.Guid", required, true);
-                    }
-
-                    if (string.Equals(schema.Format, "date-time", StringComparison.OrdinalIgnoreCase))
-                    {
-                        return GetNullableType("global::System.DateTimeOffset", required, true);
-                    }
-
-                    return "string";
-                case "integer":
-                    return GetNullableType("int", required, true);
-                case "number":
-                    return GetNullableType("decimal", required, true);
-                case "boolean":
-                    return GetNullableType("bool", required, true);
-                case "array":
-                    if (!forBody)
-                    {
-                        return "global::System.Text.Json.JsonElement";
-                    }
-
-                    var itemType = GetArrayItemTypeName(schema.Items);
-                    return "global::System.Collections.Generic.IReadOnlyList<" + itemType + ">";
-                case "object":
-                default:
-                    return "global::System.Text.Json.JsonElement";
-            }
-        }
-
-        private static string GetArrayItemTypeName(OpenApiSchema schema)
-        {
-            if (schema == null || !string.IsNullOrWhiteSpace(schema.Ref))
-            {
-                return "global::System.Text.Json.JsonElement";
-            }
-
-            var type = schema.Type as string;
-            switch (type)
-            {
-                case "string":
-                    if (string.Equals(schema.Format, "uuid", StringComparison.OrdinalIgnoreCase))
-                    {
-                        return "global::System.Guid";
-                    }
-
-                    if (string.Equals(schema.Format, "date-time", StringComparison.OrdinalIgnoreCase))
-                    {
-                        return "global::System.DateTimeOffset";
-                    }
-
-                    return "string";
-                case "integer":
-                    return "int";
-                case "number":
-                    return "decimal";
-                case "boolean":
-                    return "bool";
-                default:
-                    return "global::System.Text.Json.JsonElement";
-            }
-        }
-
-        private static ResponseKind GetResponseKind(OpenApiSchema schema)
-        {
-            if (schema == null)
-            {
-                return ResponseKind.None;
-            }
-
-            var typeName = GetResponseTypeName(schema);
-            return typeName == "global::System.Text.Json.JsonElement"
-                ? ResponseKind.JsonElement
-                : ResponseKind.TypedJson;
-        }
-
-        private static string GetResponseTypeName(OpenApiSchema schema)
-        {
-            return GetTypeName(schema, true, true, false);
-        }
-
-        private static string GetNullableType(string typeName, bool required, bool isValueType)
-        {
-            if (required || !isValueType)
-            {
-                return typeName;
-            }
-
-            return typeName + "?";
+                GetSchemaKind(parameter.Schema),
+                resolvedType.IsSpecificModel,
+                resolvedType.NonNullableTypeName);
         }
 
         private static ParameterKind GetParameterKind(string location)
@@ -681,7 +687,7 @@ namespace Sellorio.Generators.OpenApiClient.CodeGeneration
                 return parameter.TypeName + " " + parameter.Name;
             }
 
-            if (parameter.TypeName == "string")
+            if (IsNullableReferenceType(parameter) || parameter.TypeName == "string")
             {
                 return parameter.TypeName + " " + parameter.Name + " = null";
             }
@@ -691,7 +697,7 @@ namespace Sellorio.Generators.OpenApiClient.CodeGeneration
                 return parameter.TypeName + " " + parameter.Name + " = default";
             }
 
-            if (parameter.TypeName.EndsWith("?", StringComparison.Ordinal))
+            if (IsNullableValueType(parameter))
             {
                 return parameter.TypeName + " " + parameter.Name + " = null";
             }
@@ -709,7 +715,7 @@ namespace Sellorio.Generators.OpenApiClient.CodeGeneration
 
         private static string GetHasValueExpression(GeneratedParameter parameter)
         {
-            if (parameter.TypeName == "string")
+            if (parameter.TypeName == "string" || IsNullableReferenceType(parameter))
             {
                 return parameter.Name + " != null";
             }
@@ -724,7 +730,7 @@ namespace Sellorio.Generators.OpenApiClient.CodeGeneration
                 return parameter.Name + ".ValueKind != JsonValueKind.Undefined";
             }
 
-            if (parameter.TypeName.EndsWith("?", StringComparison.Ordinal))
+            if (IsNullableValueType(parameter))
             {
                 return parameter.Name + ".HasValue";
             }
@@ -734,7 +740,7 @@ namespace Sellorio.Generators.OpenApiClient.CodeGeneration
 
         private static string GetSerializationExpression(GeneratedParameter parameter, bool unwrapOptional)
         {
-            var valueExpression = unwrapOptional && parameter.TypeName.EndsWith("?", StringComparison.Ordinal)
+            var valueExpression = unwrapOptional && IsNullableValueType(parameter)
                 ? parameter.Name + ".Value"
                 : parameter.Name;
 
@@ -773,6 +779,19 @@ namespace Sellorio.Generators.OpenApiClient.CodeGeneration
         private static string EscapeStringLiteral(string value)
         {
             return value.Replace("\\", "\\\\").Replace("\"", "\\\"");
+        }
+
+        private static bool IsNullableValueType(GeneratedParameter parameter)
+        {
+            return parameter.TypeName.EndsWith("?", StringComparison.Ordinal)
+                && parameter.SchemaKind != SchemaKind.String
+                && !parameter.TypeName.StartsWith("global::System.Collections.Generic.IReadOnlyList<", StringComparison.Ordinal);
+        }
+
+        private static bool IsNullableReferenceType(GeneratedParameter parameter)
+        {
+            return parameter.TypeName.EndsWith("?", StringComparison.Ordinal)
+                && !IsNullableValueType(parameter);
         }
     }
 
@@ -838,11 +857,9 @@ namespace Sellorio.Generators.OpenApiClient.CodeGeneration
 
         public string BodyContentType { get; }
 
-        public ResponseKind ResponseKind { get; }
-
         public string ReturnType { get; }
 
-        public string ResponseTypeName { get; }
+        public GeneratedReturnStrategy ReturnStrategy { get; }
 
         public GeneratedOperation(
             string methodName,
@@ -851,9 +868,7 @@ namespace Sellorio.Generators.OpenApiClient.CodeGeneration
             IReadOnlyList<GeneratedParameter> parameters,
             GeneratedParameter bodyParameter,
             string bodyContentType,
-            ResponseKind responseKind,
-            string returnType,
-            string responseTypeName)
+            GeneratedReturnStrategy returnStrategy)
         {
             MethodName = methodName;
             HttpMethodName = httpMethodName;
@@ -861,9 +876,59 @@ namespace Sellorio.Generators.OpenApiClient.CodeGeneration
             Parameters = parameters;
             BodyParameter = bodyParameter;
             BodyContentType = bodyContentType;
-            ResponseKind = responseKind;
+            ReturnStrategy = returnStrategy;
+            ReturnType = returnStrategy.ReturnType;
+        }
+    }
+
+    internal sealed class GeneratedReturnStrategy
+    {
+        public ResultReturnKind Kind { get; }
+
+        public string ReturnType { get; }
+
+        public string ContextTypeName { get; }
+
+        public string ValueTypeName { get; }
+
+        public IReadOnlyList<GeneratedSuccessResponse> SuccessResponses { get; }
+
+        private GeneratedReturnStrategy(ResultReturnKind kind, string returnType, string contextTypeName, string valueTypeName, IReadOnlyList<GeneratedSuccessResponse> successResponses)
+        {
+            Kind = kind;
             ReturnType = returnType;
-            ResponseTypeName = responseTypeName;
+            ContextTypeName = contextTypeName;
+            ValueTypeName = valueTypeName;
+            SuccessResponses = successResponses;
+        }
+
+        public static GeneratedReturnStrategy CreateResult(string returnType, string contextTypeName = null)
+        {
+            return new GeneratedReturnStrategy(ResultReturnKind.Result, returnType, contextTypeName, null, Array.Empty<GeneratedSuccessResponse>());
+        }
+
+        public static GeneratedReturnStrategy CreateValueResult(string returnType, string contextTypeName, string valueTypeName, params GeneratedSuccessResponse[] successResponses)
+        {
+            return new GeneratedReturnStrategy(ResultReturnKind.ValueResult, returnType, contextTypeName, valueTypeName, successResponses ?? Array.Empty<GeneratedSuccessResponse>());
+        }
+    }
+
+    internal sealed class GeneratedSuccessResponse
+    {
+        public string StatusCode { get; }
+
+        public string ConcreteTypeName { get; }
+
+        public string DeserializeTypeName { get; }
+
+        public bool RequiresWrapping { get; }
+
+        public GeneratedSuccessResponse(string statusCode, string concreteTypeName, string deserializeTypeName, bool requiresWrapping)
+        {
+            StatusCode = statusCode;
+            ConcreteTypeName = concreteTypeName;
+            DeserializeTypeName = deserializeTypeName;
+            RequiresWrapping = requiresWrapping;
         }
     }
 
@@ -881,13 +946,19 @@ namespace Sellorio.Generators.OpenApiClient.CodeGeneration
 
         public SchemaKind SchemaKind { get; }
 
+        public bool IsSpecificModel { get; }
+
+        public string NonNullableTypeName { get; }
+
         public GeneratedParameter(
             string name,
             string originalName,
             string typeName,
             bool isOptional,
             ParameterKind kind,
-            SchemaKind schemaKind)
+            SchemaKind schemaKind,
+            bool isSpecificModel,
+            string nonNullableTypeName)
         {
             Name = name;
             OriginalName = originalName;
@@ -895,6 +966,8 @@ namespace Sellorio.Generators.OpenApiClient.CodeGeneration
             IsOptional = isOptional;
             Kind = kind;
             SchemaKind = schemaKind;
+            IsSpecificModel = isSpecificModel;
+            NonNullableTypeName = nonNullableTypeName;
         }
     }
 
@@ -907,11 +980,10 @@ namespace Sellorio.Generators.OpenApiClient.CodeGeneration
         CancellationToken,
     }
 
-    internal enum ResponseKind
+    internal enum ResultReturnKind
     {
-        None,
-        JsonElement,
-        TypedJson,
+        Result,
+        ValueResult,
     }
 
     internal enum SchemaKind
