@@ -30,7 +30,7 @@ namespace Sellorio.Analyzers.CodeAnalysis.Design
                 return;
             }
 
-            if (fieldSymbol.DeclaredAccessibility != Accessibility.Private)
+            if (fieldSymbol.DeclaredAccessibility != Accessibility.Private && !fieldSymbol.IsConst)
             {
                 var diagnostic =
                     fieldSymbol.IsStatic && fieldSymbol.IsReadOnly
