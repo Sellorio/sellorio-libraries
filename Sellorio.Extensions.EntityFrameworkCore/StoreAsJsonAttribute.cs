@@ -11,19 +11,26 @@ public sealed class StoreAsJsonAttribute : Attribute
     {
         foreach (var entityType in modelBuilder.Model.GetEntityTypes())
         {
-            var entityBuilder = modelBuilder.Entity(entityType.ClrType);
-
             foreach (var propertyInfo in entityType.ClrType.GetProperties())
             {
                 var thisAttribute = propertyInfo.GetCustomAttribute<StoreAsJsonAttribute>();
 
                 if (thisAttribute != null)
                 {
-                    var propertyBuilder = entityBuilder.Property(propertyInfo.Name);
                     var converterType = typeof(ValueConverter<>).MakeGenericType(propertyInfo.PropertyType);
-                    var converter = (Microsoft.EntityFrameworkCore.Storage.ValueConversion.ValueConverter)converterType.GetConstructors().First().Invoke([]);
+                    var converter = (Microsoft.EntityFrameworkCore.Storage.ValueConversion.ValueConverter)converterType
+                        .GetConstructors()
+                        .First()
+                        .Invoke([]);
 
-                    propertyBuilder.HasConversion(converter);
+                    if (entityType.IsOwned())
+                    {
+                        entityType.FindProperty(propertyInfo.Name)!.SetValueConverter(converter);
+                    }
+                    else
+                    {
+                        modelBuilder.Entity(entityType.ClrType).Property(propertyInfo.Name).HasConversion(converter);
+                    }
                 }
             }
         }
@@ -32,7 +39,9 @@ public sealed class StoreAsJsonAttribute : Attribute
     private class ValueConverter<TTarget> : Microsoft.EntityFrameworkCore.Storage.ValueConversion.ValueConverter<TTarget, string>
     {
         public ValueConverter()
-            : base(x => JsonSerializer.Serialize(x, default(JsonSerializerOptions)), x => JsonSerializer.Deserialize<TTarget>(x, default(JsonSerializerOptions))!)
+            : base(
+                x => JsonSerializer.Serialize(x, default(JsonSerializerOptions)),
+                x => JsonSerializer.Deserialize<TTarget>(x, default(JsonSerializerOptions))!)
         {
         }
     }
