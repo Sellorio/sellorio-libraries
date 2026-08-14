@@ -25,7 +25,10 @@ public sealed class StoreAsJsonAttribute : Attribute
 
                     if (entityType.IsOwned())
                     {
-                        entityType.FindProperty(propertyInfo.Name)!.SetValueConverter(converter);
+                        var property = entityType.FindProperty(propertyInfo.Name)
+                            ?? entityType.AddProperty(propertyInfo.Name, propertyInfo.PropertyType, propertyInfo);
+
+                        property.SetValueConverter(converter);
                     }
                     else
                     {
